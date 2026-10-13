@@ -5,29 +5,31 @@ type Node =
   | { kind: "unary"; sign: number; child: Node }
   | { kind: "binary"; op: string; left: Node; right: Node }
   | { kind: "call"; name: string; args: Node[] };
-const functions: Record<
+const functions = new Map<
   string,
   { arity: number; run: (...values: number[]) => number }
-> = Object.assign(Object.create(null), {
-  sin: { arity: 1, run: Math.sin },
-  cos: { arity: 1, run: Math.cos },
-  tan: { arity: 1, run: Math.tan },
-  asin: { arity: 1, run: Math.asin },
-  acos: { arity: 1, run: Math.acos },
-  atan: { arity: 1, run: Math.atan },
-  sqrt: { arity: 1, run: Math.sqrt },
-  abs: { arity: 1, run: Math.abs },
-  exp: { arity: 1, run: Math.exp },
-  log: { arity: 1, run: Math.log },
-  ln: { arity: 1, run: Math.log },
-  log10: { arity: 1, run: Math.log10 },
-  floor: { arity: 1, run: Math.floor },
-  ceil: { arity: 1, run: Math.ceil },
-  round: { arity: 1, run: Math.round },
-  min: { arity: 2, run: Math.min },
-  max: { arity: 2, run: Math.max },
-  pow: { arity: 2, run: Math.pow },
-});
+>(
+  Object.entries({
+    sin: { arity: 1, run: Math.sin },
+    cos: { arity: 1, run: Math.cos },
+    tan: { arity: 1, run: Math.tan },
+    asin: { arity: 1, run: Math.asin },
+    acos: { arity: 1, run: Math.acos },
+    atan: { arity: 1, run: Math.atan },
+    sqrt: { arity: 1, run: Math.sqrt },
+    abs: { arity: 1, run: Math.abs },
+    exp: { arity: 1, run: Math.exp },
+    log: { arity: 1, run: Math.log },
+    ln: { arity: 1, run: Math.log },
+    log10: { arity: 1, run: Math.log10 },
+    floor: { arity: 1, run: Math.floor },
+    ceil: { arity: 1, run: Math.ceil },
+    round: { arity: 1, run: Math.round },
+    min: { arity: 2, run: Math.min },
+    max: { arity: 2, run: Math.max },
+    pow: { arity: 2, run: Math.pow },
+  }),
+);
 export const reservedNames = new Set([
   "x",
   "pi",
@@ -35,7 +37,7 @@ export const reservedNames = new Set([
   "__proto__",
   "constructor",
   "prototype",
-  ...Object.keys(functions),
+  ...functions.keys(),
 ]);
 export function compileExpression(
   source: string,
@@ -78,7 +80,7 @@ export function compileExpression(
       if (!Number.isFinite(value)) throw new Error("Number must be finite");
       left = { kind: "number", value };
     } else if (peek() === "(") {
-      const fn = functions[current];
+      const fn = functions.get(current);
       if (!fn) throw new Error(`Unknown function: ${current}`);
       take();
       const args = [expression(0, depth + 1)];
@@ -130,9 +132,9 @@ export function compileExpression(
       case "unary":
         return node.sign * evaluate(node.child, vars);
       case "call":
-        return functions[node.name]!.run(
-          ...node.args.map((arg) => evaluate(arg, vars)),
-        );
+        return functions
+          .get(node.name)!
+          .run(...node.args.map((arg) => evaluate(arg, vars)));
       case "binary": {
         const a = evaluate(node.left, vars),
           b = evaluate(node.right, vars);

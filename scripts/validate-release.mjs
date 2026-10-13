@@ -1,0 +1,13 @@
+import { readFileSync } from "node:fs";
+import assert from "node:assert/strict";
+const read = (name) => JSON.parse(readFileSync(name, "utf8"));
+const manifest = read("manifest.json");
+const tag = process.env.GITHUB_REF_NAME;
+assert.match(tag ?? "", /^\d+\.\d+\.\d+$/);
+assert.equal(tag, manifest.version, "Tag must match manifest version");
+assert.equal(read("package.json").version, tag);
+assert.equal(read("package-lock.json").packages[""].version, tag);
+assert.equal(read("versions.json")[tag], manifest.minAppVersion);
+assert.deepEqual(read("dist/manifest.json"), manifest);
+readFileSync(`docs/release-notes-${tag}.md`);
+console.log(`Release ${tag} metadata validated`);

@@ -280,6 +280,6 @@ export function replaceBlock(
   return (
     markdown.slice(0, match.index) +
     replacement +
-    markdown.slice(match.index! + match[0].length)
+    markdown.slice(match.index + match[0].length)
   );
 }

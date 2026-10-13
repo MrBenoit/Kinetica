@@ -73,7 +73,7 @@ No JavaScript or HTML from a document is executed. Formulas are parsed by a rest
 
 ## Install the beta
 
-Download the three plugin files from [GitHub Releases](https://github.com/MrBenoit/Kinetica/releases) when a release is available. You can also build them locally with the development commands below.
+Download the three plugin files from [GitHub Releases](https://github.com/MrBenoit/Kinetica/releases) You can also build them locally with the development commands below.
 
 1. Place `main.js`, `manifest.json` and `styles.css` in `<vault>/.obsidian/plugins/kinetica/`.
 2. Reload Obsidian and enable **Kinetica** under **Settings > Community plugins**.
@@ -96,11 +96,11 @@ npm run check
 
 `src/model.ts` owns document validation and conflict-aware replacement. `src/expression.ts` parses math. `src/player.ts`, `src/plot.ts` and `src/draw.ts` render without the Obsidian API. `src/editor.ts` owns editable drafts and history. `src/main.ts` adapts those components to commands, Markdown rendering and vault storage.
 
-Tests cover expression parsing, invalid input, serialization, concurrent edit protection, playback, slider behavior, editor history and failed saves. CI runs formatting, lint, tests and the production build. It uploads a build artifact; it does not publish releases.
+Tests cover expression parsing, invalid input, serialization, concurrent edit protection, playback, slider behavior, editor history and failed saves. CI runs formatting, lint, tests and the production build. It uploads a build artifact. Pushing a version tag runs a separate release workflow that tests, attests and publishes the installable files.
 
 ## Distribution
 
-See [RELEASING.md](RELEASING.md) for build, release and community-directory submission steps. The release tag must match the manifest version without a `v` prefix, currently `0.1.0`.
+See [RELEASING.md](RELEASING.md) for build, release and community-directory submission steps. The release tag must match the manifest version without a `v` prefix, currently `0.1.1`.
 
 Follow the current [Obsidian submission guide](https://docs.obsidian.md/Plugins/Releasing/Submit%20your%20plugin) for community-directory submission. No repository, release or submission is created by the build scripts.
 

@@ -9,11 +9,11 @@
 
 ## Publish a GitHub release
 
-Create a tag matching the manifest version exactly, such as `0.1.0`, without a `v` prefix. Create a GitHub release for that tag with a short description and known limitations.
+Write `docs/release-notes-<version>.md`, commit it with the version updates and push `main`. Push a tag matching the manifest version exactly, without a `v` prefix.
 
-Attach `dist/main.js`, `dist/manifest.json` and `dist/styles.css` as individual release assets. The auto-generated source archives are not enough for Obsidian installation. An optional zip can contain the same three files.
+The Release workflow checks the metadata, runs all checks and generates provenance attestations for the three installable files. It uploads them to a draft release and publishes only after every upload succeeds. A retry can resume a draft, but refuses to replace a published release. Fix an already published version by releasing a new version.
 
-For this first beta, use the copy in [docs/release-notes-0.1.0.md](docs/release-notes-0.1.0.md).
+Download the assets and verify their attestations with `gh attestation verify main.js --repo MrBenoit/Kinetica`. Repeat for `styles.css` and `manifest.json`. Only these three files belong in a release. The source archives are supplied by GitHub.
 
 ## Submit to the community directory
 

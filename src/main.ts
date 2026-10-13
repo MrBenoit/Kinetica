@@ -6,20 +6,16 @@ import {
   Modal,
   Notice,
   Plugin,
-  PluginSettingTab,
-  Setting,
   SuggestModal,
   TFile,
   normalizePath,
 } from "obsidian";
+import { MotionSettings, type Settings } from "./settings";
 import { Editor } from "./editor";
 import { Player } from "./player";
 import { parseMotion, replaceBlock, toBlock, type Motion } from "./model";
-import { translator, type Translate, type Language } from "./i18n";
+import { translator, type Translate } from "./i18n";
 import { button, el, errorMessage } from "./ui";
-interface Settings {
-  language: "auto" | Language;
-}
 class ConfirmDiscard extends Modal {
   constructor(
     app: App,
@@ -362,49 +358,5 @@ export default class Kinetica extends Plugin {
       new ChooseMotion(this.app, items, (m) =>
         this.openExisting(file.path, m),
       ).open();
-  }
-}
-class MotionSettings extends PluginSettingTab {
-  constructor(
-    app: App,
-    private plugin: Kinetica,
-  ) {
-    super(app, plugin);
-  }
-  display() {
-    const t = this.plugin.t;
-    this.containerEl.empty();
-    new Setting(this.containerEl)
-      .setName(t("Language", "Язык"))
-      .setDesc(
-        t(
-          "Reopen notes to refresh players. Reload the plugin to update command names.",
-          "Открой заметки заново для смены языка проигрывателей. Перезагрузи плагин для смены названий команд.",
-        ),
-      )
-      .addDropdown((drop) =>
-        drop
-          .addOptions({
-            auto: t("Same as Obsidian", "Как в Obsidian"),
-            en: "English",
-            ru: "Русский",
-          })
-          .setValue(this.plugin.settings.language)
-          .onChange(async (value) => {
-            this.plugin.settings.language = value as Settings["language"];
-            await this.plugin.saveData(this.plugin.settings);
-            this.plugin.updateLanguage();
-            this.display();
-          }),
-      );
-    el(
-      this.containerEl,
-      "p",
-      "",
-      t(
-        "Kinetica runs offline. Documents live inside motion code blocks in your notes. No accounts, telemetry or external scripts.",
-        "Kinetica работает без интернета. Документы хранятся внутри блоков motion в заметках. Без аккаунтов, телеметрии и внешних скриптов.",
-      ),
-    );
   }
 }
