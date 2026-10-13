@@ -22,7 +22,15 @@ export interface Edge {
   to: string;
   label: string;
 }
+export interface Question {
+  prompt: string;
+  options: { text: string; explanation: string }[];
+  correct: number;
+}
 export interface Step {
+  activeLines?: number[];
+  variables?: { name: string; value: string }[];
+  question?: Question;
   title: string;
   description: string;
   code: string;
@@ -30,7 +38,7 @@ export interface Step {
   edges: Edge[];
 }
 interface Base {
-  version: 1;
+  version: 1 | 2;
   id: string;
   title: string;
   description: string;
@@ -64,7 +72,30 @@ export interface Plot extends Base {
   parameters: Parameter[];
   curves: Curve[];
 }
-export type Motion = Scene | Plot;
+export interface QueueConfig {
+  jobs: number;
+  arrival: number;
+  workers: number;
+  capacity: number;
+  service: number;
+}
+export interface Lab extends Base {
+  version: 2;
+  type: "lab";
+  config: QueueConfig;
+  compare: boolean;
+}
+export interface Comparison extends Base {
+  version: 2;
+  type: "comparison";
+  scenes: Scene[];
+}
+export interface PlotlyDocument extends Base {
+  version: 2;
+  type: "plotly";
+  figure: Record<string, unknown>;
+}
+export type Motion = Scene | Plot | Lab | Comparison | PlotlyDocument;
 export const clone = <T>(value: T): T => structuredClone(value);
 export const uid = (): string => crypto.randomUUID();
 function object(value: unknown, path: string): Record<string, unknown> {
@@ -113,14 +144,53 @@ function unique(values: string[], path: string) {
 }
 export function validateMotion(input: unknown): Motion {
   const m = object(input, "document");
-  if (m.version !== 1) throw new Error("Unsupported document version");
+  if (m.version !== 1 && m.version !== 2)
+    throw new Error("Unsupported document version");
   const base = {
-    version: 1 as const,
+    version: m.version as 1 | 2,
     id: ident(m.id, "id"),
     title: str(m.title, "title", 120),
     description: str(m.description, "description"),
   };
   if (!base.title.trim()) throw new Error("Title is required");
+  if (m.type === "lab" && m.version === 2) {
+    const c = object(m.config, "config");
+    if (typeof m.compare !== "boolean")
+      throw new Error("Invalid comparison setting");
+    return {
+      ...base,
+      version: 2,
+      type: "lab",
+      compare: m.compare,
+      config: {
+        jobs: integer(c.jobs, "jobs", 1, 60),
+        arrival: integer(c.arrival, "arrival", 1, 6),
+        workers: integer(c.workers, "workers", 1, 8),
+        capacity: integer(c.capacity, "capacity", 0, 20),
+        service: integer(c.service, "service", 1, 10),
+      },
+    };
+  }
+  if (m.type === "comparison" && m.version === 2) {
+    const scenes = list(m.scenes, "scenes", 2, 2).map((raw) => {
+      if (object(raw, "scene").type !== "scene")
+        throw new Error("Comparison requires two scenes");
+      const scene = validateMotion(raw);
+      if (scene.type !== "scene")
+        throw new Error("Comparison requires two scenes");
+      if (scene.steps.some((step) => step.question))
+        throw new Error("Comparison scenes cannot contain questions");
+      return scene;
+    });
+    return { ...base, version: 2, type: "comparison", scenes };
+  }
+  if (m.type === "plotly" && m.version === 2)
+    return {
+      ...base,
+      version: 2,
+      type: "plotly",
+      figure: validateFigure(m.figure),
+    };
   if (m.type === "scene") {
     const steps = list(m.steps, "steps", 1, 100).map((raw, i): Step => {
       const s = object(raw, `step ${i + 1}`);
@@ -161,6 +231,7 @@ export function validateMotion(input: unknown): Motion {
         title: str(s.title, "step.title", 120),
         description: str(s.description, "step.description"),
         code: str(s.code, "step.code", 4000),
+        ...stepExtras(s, base.version),
         nodes,
         edges,
       };
@@ -282,4 +353,149 @@ export function replaceBlock(
     replacement +
     markdown.slice(match.index + match[0].length)
   );
+}
+
+function integer(
+  value: unknown,
+  path: string,
+  min: number,
+  max: number,
+): number {
+  const result = num(value, path, min, max);
+  if (!Number.isInteger(result))
+    throw new Error(`${path}: expected an integer`);
+  return result;
+}
+function stepExtras(
+  s: Record<string, unknown>,
+  version: number,
+): Partial<Step> {
+  if (
+    version === 1 &&
+    (s.activeLines !== undefined ||
+      s.variables !== undefined ||
+      s.question !== undefined)
+  )
+    throw new Error("Interactive steps require document version 2");
+  const extra: Partial<Step> = {};
+  if (s.activeLines !== undefined) {
+    extra.activeLines = list(s.activeLines, "activeLines", 0, 200).map((n) =>
+      integer(n, "line", 1, String(s.code).split("\n").length),
+    );
+    unique(extra.activeLines.map(String), "activeLines");
+  }
+  if (s.variables !== undefined) {
+    extra.variables = list(s.variables, "variables", 0, 30).map((raw) => {
+      const v = object(raw, "variable");
+      return {
+        name: str(v.name, "variable.name", 64),
+        value: str(v.value, "variable.value", 200),
+      };
+    });
+    unique(
+      extra.variables.map((v) => v.name),
+      "variables",
+    );
+  }
+  if (s.question !== undefined) {
+    const q = object(s.question, "question");
+    const options = list(q.options, "answers", 2, 6).map((raw) => {
+      const a = object(raw, "answer");
+      return {
+        text: str(a.text, "answer.text", 200),
+        explanation: str(a.explanation, "answer.explanation", 2000),
+      };
+    });
+    extra.question = {
+      prompt: str(q.prompt, "question.prompt", 1000),
+      options,
+      correct: integer(q.correct, "correct", 0, options.length - 1),
+    };
+  }
+  return extra;
+}
+export function validateFigure(input: unknown): Record<string, unknown> {
+  const figure = object(input, "figure");
+  list(figure.data, "figure.data", 1, 100);
+  if (figure.layout !== undefined) object(figure.layout, "figure.layout");
+  if (figure.frames !== undefined) list(figure.frames, "figure.frames", 0, 100);
+  let count = 0;
+  function visit(value: unknown, depth = 0): unknown {
+    if (++count > 100000 || depth > 24)
+      throw new Error("Plotly figure is too complex");
+    if (typeof value === "string") {
+      if (/(?:https?:|ftp:|javascript:|data:text|file:|^\/\/)/i.test(value))
+        throw new Error(
+          "External resources are not supported in Plotly figures",
+        );
+      return value.replace(/<[^>]*>/g, "");
+    }
+    if (value === null || typeof value === "boolean") return value;
+    if (typeof value === "number" && Number.isFinite(value)) return value;
+    if (Array.isArray(value)) return value.map((v) => visit(v, depth + 1));
+    const source = object(value, "figure value");
+    const clean: Record<string, unknown> = {};
+    for (const [key, item] of Object.entries(source)) {
+      if (["__proto__", "constructor", "prototype"].includes(key))
+        throw new Error("Invalid Plotly property");
+      if (/^(?:.*src|url|href|source|images|mapbox|map|geo)$/i.test(key))
+        throw new Error(
+          "External resources are not supported in Plotly figures",
+        );
+      if (
+        key === "type" &&
+        typeof item === "string" &&
+        [
+          "scattergeo",
+          "choropleth",
+          "scattermap",
+          "scattermapbox",
+          "choroplethmap",
+          "choroplethmapbox",
+          "densitymap",
+          "densitymapbox",
+        ].includes(item)
+      )
+        throw new Error(
+          "Map traces require external resources and are not supported offline",
+        );
+      clean[key] = visit(item, depth + 1);
+    }
+    return clean;
+  }
+  const layout = { ...object(figure.layout ?? {}, "figure.layout") };
+  // Python templates contain unused geographic defaults that would request map assets
+  if (
+    layout.template &&
+    typeof layout.template === "object" &&
+    !Array.isArray(layout.template)
+  ) {
+    const template = { ...object(layout.template, "template") };
+    if (template.layout && typeof template.layout === "object") {
+      const defaults = { ...object(template.layout, "template.layout") };
+      for (const key of ["geo", "map", "mapbox"]) delete defaults[key];
+      template.layout = defaults;
+    }
+    if (template.data && typeof template.data === "object") {
+      const defaults = { ...object(template.data, "template.data") };
+      for (const key of [
+        "scattergeo",
+        "choropleth",
+        "scattermap",
+        "scattermapbox",
+        "choroplethmap",
+        "choroplethmapbox",
+        "densitymap",
+        "densitymapbox",
+      ])
+        delete defaults[key];
+      template.data = defaults;
+    }
+    layout.template = template;
+  }
+  return visit({
+    data: figure.data,
+    layout,
+    frames: figure.frames ?? [],
+  }) as Record<string, unknown>;
 }

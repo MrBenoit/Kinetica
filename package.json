@@ -1,6 +1,6 @@
 {
   "name": "kinetica",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Create step-by-step scenes and interactive function plots in your notes.",
   "type": "module",
   "license": "MIT",
@@ -33,5 +33,9 @@
   "bugs": {
     "url": "https://github.com/MrBenoit/Kinetica/issues"
   },
-  "homepage": "https://github.com/MrBenoit/Kinetica#readme"
+  "homepage": "https://github.com/MrBenoit/Kinetica#readme",
+  "dependencies": {
+    "plotly.js-dist-min": "4.1.2",
+    "plotly.js-locales": "4.1.2"
+  }
 }

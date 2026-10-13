@@ -461,3 +461,126 @@
     overflow-y: visible;
   }
 }
+
+.mn-player [hidden] {
+  display: none !important;
+}
+.mn-code-lines {
+  padding: 8px 0;
+  white-space: pre;
+  overflow-x: auto;
+}
+.mn-code-line {
+  display: block;
+  min-height: 1.5em;
+  padding: 0 12px;
+}
+.mn-code-line.is-active {
+  background: color-mix(in srgb, var(--interactive-accent) 20%, transparent);
+  border-left: 3px solid var(--interactive-accent);
+}
+.mn-line-number {
+  display: inline-block;
+  width: 3ch;
+  margin-right: 16px;
+  opacity: 0.55;
+  user-select: none;
+}
+.mn-variables {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0;
+}
+.mn-variables caption {
+  text-align: left;
+  font-weight: 600;
+}
+.mn-variables th,
+.mn-variables td {
+  text-align: left;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+.mn-variables .is-changed {
+  background: color-mix(in srgb, var(--interactive-accent) 15%, transparent);
+}
+.mn-question {
+  margin: 16px 0;
+}
+.mn-question:empty {
+  display: none;
+}
+.mn-question-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+}
+.mn-comparison-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.mn-comparison-grid > * {
+  min-width: 0;
+}
+.mn-comparison-grid .mn-player {
+  padding: 12px;
+}
+.mn-lab-controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+  margin: 16px 0;
+}
+.mn-lab-control {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.mn-lab-control span {
+  flex-basis: 100%;
+}
+.mn-lab-control input {
+  flex: 1;
+  min-width: 80px;
+}
+.mn-lab-chart {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+.mn-lab-axis {
+  fill: none;
+  stroke: var(--text-muted);
+  stroke-width: 1.5;
+}
+.mn-lab-series {
+  fill: none;
+  stroke-width: 3;
+}
+.mn-series-0 {
+  stroke: #ee9e52;
+}
+.mn-series-1 {
+  stroke: #568cf5;
+}
+.mn-lab-cursor {
+  stroke: var(--text-normal);
+  stroke-dasharray: 5 4;
+}
+.mn-plotly-frame {
+  width: 100%;
+  height: 520px;
+  border: 0;
+  display: block;
+}
+@media (max-width: 700px) {
+  .mn-comparison-grid {
+    grid-template-columns: 1fr;
+  }
+  .mn-plotly-frame {
+    height: 400px;
+  }
+}

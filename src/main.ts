@@ -11,6 +11,7 @@ import {
   normalizePath,
 } from "obsidian";
 import { MotionSettings, type Settings } from "./settings";
+import { standaloneHTML } from "./export";
 import { Editor } from "./editor";
 import { Player } from "./player";
 import { parseMotion, replaceBlock, toBlock, type Motion } from "./model";
@@ -62,6 +63,7 @@ class EditorModal extends Modal {
     private t: Translate,
     private save: (motion: Motion) => Promise<void>,
     private initial?: Motion,
+    private share?: (motion: Motion) => Promise<void>,
   ) {
     super(app);
   }
@@ -77,6 +79,7 @@ class EditorModal extends Modal {
       },
       () => this.close(),
       this.initial,
+      this.share,
     );
   }
   close() {
@@ -128,11 +131,14 @@ class MotionRender extends MarkdownRenderChild {
     private t: Translate,
     private edit: () => void,
     private removed: () => void,
+    private share: () => void,
   ) {
     super(element);
   }
   onload() {
-    this.player = new Player(this.containerEl, this.motion, this.t, this.edit);
+    this.player = new Player(this.containerEl, this.motion, this.t, this.edit, {
+      share: this.share,
+    });
   }
   onunload() {
     this.player?.destroy();
@@ -177,6 +183,11 @@ export default class Kinetica extends Plugin {
             this.t,
             () => this.openExisting(ctx.sourcePath, motion),
             () => this.renderers.delete(renderer),
+            () => {
+              void this.exportHTML(motion, ctx.sourcePath).catch(
+                (error) => new Notice(errorMessage(error, this.t)),
+              );
+            },
           );
           this.renderers.add(renderer);
           ctx.addChild(renderer);
@@ -243,6 +254,24 @@ export default class Kinetica extends Plugin {
         return true;
       },
     });
+    this.addCommand({
+      id: "export-html",
+      name: this.t(
+        "Export visualization as HTML",
+        "Экспортировать визуализацию в HTML",
+      ),
+      checkCallback: (checking) => {
+        const file = this.app.workspace.getActiveFile();
+        if (!file || file.extension !== "md") return false;
+        if (!checking)
+          void this.choose(file, (motion) => {
+            void this.exportHTML(motion, file.path).catch(
+              (error) => new Notice(errorMessage(error, this.t)),
+            );
+          }).catch((error) => new Notice(errorMessage(error, this.t)));
+        return true;
+      },
+    });
     this.addSettingTab(new MotionSettings(this.app, this));
   }
   onunload() {
@@ -298,30 +327,39 @@ export default class Kinetica extends Plugin {
     const active = this.app.workspace.getActiveFile();
     const folder =
       active?.parent?.path === "/" ? "" : (active?.parent?.path ?? "");
-    new EditorModal(this.app, this.t, async (motion) => {
-      if (insert && active) {
-        await this.update(
-          active,
-          (text) => text + "\n\n" + toBlock(motion) + "\n",
-        );
-      } else {
-        const safe =
-          motion.title
-            .replace(/[\\/:*?"<>|#^[\]]/g, "-")
-            .replace(/\.+$/, "")
-            .trim()
-            .slice(0, 100) || "Visualization";
-        let path = normalizePath(`${folder}/${safe}.md`),
-          suffix = 2;
-        while (this.app.vault.getAbstractFileByPath(path))
-          path = normalizePath(`${folder}/${safe} ${suffix++}.md`);
-        const file = await this.app.vault.create(path, toBlock(motion) + "\n");
-        await this.app.workspace
-          .getLeaf(false)
-          .openFile(file, { state: { mode: "preview" } });
-      }
-      new Notice(this.t("Visualization saved", "Визуализация сохранена"));
-    }).open();
+    new EditorModal(
+      this.app,
+      this.t,
+      async (motion) => {
+        if (insert && active) {
+          await this.update(
+            active,
+            (text) => text + "\n\n" + toBlock(motion) + "\n",
+          );
+        } else {
+          const safe =
+            motion.title
+              .replace(/[\\/:*?"<>|#^[\]]/g, "-")
+              .replace(/\.+$/, "")
+              .trim()
+              .slice(0, 100) || "Visualization";
+          let path = normalizePath(`${folder}/${safe}.md`),
+            suffix = 2;
+          while (this.app.vault.getAbstractFileByPath(path))
+            path = normalizePath(`${folder}/${safe} ${suffix++}.md`);
+          const file = await this.app.vault.create(
+            path,
+            toBlock(motion) + "\n",
+          );
+          await this.app.workspace
+            .getLeaf(false)
+            .openFile(file, { state: { mode: "preview" } });
+        }
+        new Notice(this.t("Visualization saved", "Визуализация сохранена"));
+      },
+      undefined,
+      (motion) => this.exportHTML(motion, active?.path),
+    ).open();
   }
   private openExisting(path: string, motion: Motion) {
     new EditorModal(
@@ -340,9 +378,36 @@ export default class Kinetica extends Plugin {
         new Notice(this.t("Visualization saved", "Визуализация сохранена"));
       },
       motion,
+      (updated) => this.exportHTML(updated, path),
     ).open();
   }
-  private async choose(file: TFile) {
+  private async exportHTML(motion: Motion, sourcePath?: string) {
+    const parent = sourcePath
+      ? this.app.vault.getAbstractFileByPath(sourcePath)?.parent?.path
+      : "";
+    const folder = parent === "/" ? "" : (parent ?? "");
+    const name =
+      motion.title
+        .replace(/[\\/:*?"<>|#^[\]]/g, "-")
+        .replace(/\.+$/, "")
+        .trim()
+        .slice(0, 100) || "Visualization";
+    let path = normalizePath(`${folder}/${name}.html`),
+      suffix = 2;
+    while (this.app.vault.getAbstractFileByPath(path))
+      path = normalizePath(`${folder}/${name} ${suffix++}.html`);
+    const html = standaloneHTML(
+      motion,
+      KINETICA_RUNTIME,
+      this.t("en", "ru") as "en" | "ru",
+      this.app.workspace.containerEl.ownerDocument.body.classList.contains(
+        "theme-dark",
+      ),
+    );
+    await this.app.vault.create(path, html);
+    new Notice(this.t("HTML saved: ", "HTML сохранён: ") + path, 8000);
+  }
+  private async choose(file: TFile, chosen?: (motion: Motion) => void) {
     const items = documents(await this.read(file));
     if (!items.length) {
       new Notice(
@@ -353,10 +418,9 @@ export default class Kinetica extends Plugin {
       );
       return;
     }
-    if (items.length === 1) this.openExisting(file.path, items[0]!);
-    else
-      new ChooseMotion(this.app, items, (m) =>
-        this.openExisting(file.path, m),
-      ).open();
+    const open =
+      chosen ?? ((motion: Motion) => this.openExisting(file.path, motion));
+    if (items.length === 1) open(items[0]!);
+    else new ChooseMotion(this.app, items, (m) => open(m)).open();
   }
 }

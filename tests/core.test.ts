@@ -81,7 +81,7 @@ describe("portable documents", () => {
     const bad = clone(m);
     bad.parameters[0]!.name = "constructor";
     expect(() => validateMotion(bad)).toThrow(/parameter/);
-    expect(() => validateMotion({ ...m, version: 2 })).toThrow(/version/);
+    expect(() => validateMotion({ ...m, version: 3 })).toThrow(/version/);
   });
   it("preserves other content changed while the editor was open", () => {
     const m = template("wave", t);

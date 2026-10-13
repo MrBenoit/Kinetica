@@ -2,9 +2,105 @@ import type { Motion, SceneNode } from "./model";
 import { uid, clone } from "./model";
 import type { Translate } from "./i18n";
 export type Template =
-  "flow" | "array" | "wave" | "growth" | "blank-scene" | "blank-plot";
+  | "flow"
+  | "array"
+  | "wave"
+  | "growth"
+  | "blank-scene"
+  | "blank-plot"
+  | "code-trace"
+  | "prediction"
+  | "queue"
+  | "queue-compare"
+  | "comparison";
 export function template(kind: Template, t: Translate): Motion {
   const base = { version: 1 as const, id: uid(), title: "", description: "" };
+  if (kind === "queue" || kind === "queue-compare")
+    return {
+      ...base,
+      version: 2,
+      type: "lab",
+      title: t("Queue laboratory", "Лаборатория очереди"),
+      description: t(
+        "Explore backpressure, buffers and worker pools.",
+        "Исследуй блокировку отправителей, буферы и пул работников.",
+      ),
+      config: { jobs: 24, arrival: 2, workers: 3, capacity: 4, service: 3 },
+      compare: kind === "queue-compare",
+    };
+  if (kind === "comparison") {
+    const left = template("array", t),
+      right = template("array", t);
+    if (left.type !== "scene" || right.type !== "scene")
+      throw new Error("Expected scenes");
+    right.title = t("Append within capacity", "Append в пределах ёмкости");
+    right.description = t(
+      "Spare capacity keeps the same backing array.",
+      "При достаточной ёмкости базовый массив остаётся прежним.",
+    );
+    right.steps[0]!.nodes[0]!.value = "len=2, cap=4";
+    right.steps[0]!.nodes[1]!.value = "[10, 20, 0, 0]";
+    right.steps[0]!.code = "s := make([]int, 2, 4)\ns[0], s[1] = 10, 20";
+    right.steps[0]!.description = t(
+      "Two free slots remain in the backing array.",
+      "В базовом массиве остаются два свободных места.",
+    );
+    right.steps[1] = clone(right.steps[0]!);
+    right.steps[1]!.title = t("Reuse the array", "Используем прежний массив");
+    right.steps[1]!.description = t(
+      "Write 30 into the next slot. No new array is needed.",
+      "Записываем 30 в следующую ячейку. Новый массив не нужен.",
+    );
+    right.steps[1]!.code = "s = append(s, 30)";
+    right.steps[1]!.nodes[0]!.value = "len=3, cap=4";
+    right.steps[1]!.nodes[1]!.value = "[10, 20, 30, 0]";
+    return {
+      ...base,
+      version: 2,
+      type: "comparison",
+      title: t("Compare append", "Сравнение append"),
+      scenes: [left, right],
+    };
+  }
+  if (kind === "code-trace" || kind === "prediction") {
+    const scene = template("array", t);
+    if (scene.type !== "scene") throw new Error("Expected scene");
+    scene.version = 2;
+    const code = "s := []int{10, 20}\ns = append(s, 30)";
+    scene.steps.forEach((step, i) => {
+      step.code = code;
+      step.activeLines = [i + 1];
+      step.variables = [
+        { name: "len(s)", value: String(i + 2) },
+        { name: "cap(s)", value: i ? ">=3" : "2" },
+      ];
+    });
+    if (kind === "prediction")
+      scene.steps[0]!.question = {
+        prompt: t(
+          "Will append reuse the array?",
+          "Использует ли append прежний массив?",
+        ),
+        options: [
+          {
+            text: t("Yes", "Да"),
+            explanation: t(
+              "The current array is full. There is no spare capacity.",
+              "Массив заполнен. Свободной ёмкости нет.",
+            ),
+          },
+          {
+            text: t("No", "Нет"),
+            explanation: t(
+              "Append needs more capacity, so it allocates a new array.",
+              "Для append нужна дополнительная ёмкость, поэтому создаётся новый массив.",
+            ),
+          },
+        ],
+        correct: 1,
+      };
+    return scene;
+  }
   if (kind === "wave" || kind === "growth" || kind === "blank-plot") {
     const growth = kind === "growth";
     return {

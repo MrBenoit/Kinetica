@@ -13,6 +13,18 @@ export function localizeError(error: unknown, t: Translate): string {
     );
   const message = error instanceof Error ? error.message : String(error);
   const exact: Record<string, string> = {
+    "Invalid comparison setting": "Некорректная настройка сравнения",
+    "Comparison requires two scenes": "Для сравнения нужны две сцены",
+    "Comparison scenes cannot contain questions":
+      "Вопросы доступны в отдельных сценах, без сравнения",
+    "Interactive steps require document version 2":
+      "Для интерактивных шагов нужна версия документа 2",
+    "Plotly figure is too complex": "График Plotly слишком сложный",
+    "Invalid Plotly property": "Недопустимое свойство Plotly",
+    "External resources are not supported in Plotly figures":
+      "Внешние ресурсы в графиках Plotly не поддерживаются",
+    "Map traces require external resources and are not supported offline":
+      "Географическим картам нужны внешние ресурсы, без интернета они не поддерживаются",
     "Unknown color": "Неизвестный цвет",
     "Unsupported document version": "Эта версия документа не поддерживается",
     "Title is required": "Укажи название",
@@ -43,6 +55,7 @@ export function localizeError(error: unknown, t: Translate): string {
   };
   if (Object.hasOwn(exact, message)) return t(message, exact[message]!);
   const patterns: [RegExp, string][] = [
+    [/^(.+): expected an integer$/, "$1: ожидается целое число"],
     [/^(.+): expected an object$/, "$1: ожидается объект"],
     [
       /^(.+): expected text up to (.+) characters$/,

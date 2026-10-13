@@ -5,7 +5,7 @@ import { errorMessage } from "./ui";
 import playerStyles from "../styles.css?raw";
 import embedStyles from "./embed.css?raw";
 export class KineticaPlayer extends HTMLElement {
-  static observedAttributes = ["lang"];
+  static observedAttributes = ["lang", "theme"];
   private player?: Player;
   private content: HTMLDivElement;
   private readonly ready = () => this.refresh();

@@ -7,7 +7,7 @@
 
 Create visual explanations inside Obsidian: step-by-step diagrams and function plots that respond to sliders. Start from a template and use the editor to build an explanation without writing JavaScript.
 
-Kinetica is an early beta. It has not been submitted to the Obsidian community directory. Desktop use has been tested on macOS; mobile testing is still needed.
+Kinetica is an early beta. The community listing is being prepared. Desktop use has been tested on macOS; mobile testing is still needed.
 
 [Get started](#install-the-beta) | [Examples](examples/) | [Contributing](CONTRIBUTING.md)
 
@@ -38,7 +38,7 @@ The interface follows Obsidian's language, with English and Russian supported. Y
 - Smooth position changes between matching block IDs
 - Undo and redo in the editor, plus a discard confirmation
 
-Each step stores its own state. Editing a block changes the current step only. Duplicate the current step, then move objects or change values to describe what happens next. New objects appear immediately; existing objects animate between positions. The code excerpt changes with the step; syntax highlighting and line-by-line code selection are not included.
+Each step stores its own state. Editing a block changes the current step only. Duplicate the current step, then move objects or change values to describe what happens next. New objects appear immediately; existing objects animate between positions. Active line numbers and named variables can be stored per step. The player highlights active lines and changed values. Optional prediction questions pause playback until answered or revealed. Code is displayed without execution.
 
 The canvas uses an 800 by 440 coordinate space. A block is 140 by 74 units. The initial version supports rectangular blocks and straight arrows. It is not a general drawing application.
 
@@ -61,13 +61,24 @@ Parameter names start with a letter and use letters, digits or underscores. Func
 
 Plots sample 401 points across the X range. Undefined results are omitted and large jumps are split. This is an educational plotter, not a numerical solver: very narrow features and discontinuities between samples can be missed. Resize the axis range to inspect them.
 
+## Learning tools and Plotly
+
+- Follow code lines and variable changes with each scene step
+- Ask prediction questions before readers continue
+- Explore a queue with linked sliders, diagram, metrics and chart
+- Compare one worker against a pool, or play two scenes together
+- Import Plotly figure JSON created with Python, including offline scientific and 3D plots
+- Export any visualization as one standalone HTML file
+
+Read [Learning tools](docs/learning.md) for creation steps, Python examples and limits. The full Plotly runtime is included locally. Python scripts are not executed. Geographic maps and remote resources are not supported. Full Plotly makes the viewer about 5 MB and the plugin about 10 MB.
+
 ## Portable documents
 
 A visualization is versioned JSON inside a `motion` fenced code block in the note. Copying the note copies the full visualization; there are no hidden asset dependencies. Recipients need Kinetica to view the interactive version. With the plugin disabled, the note retains its readable source data.
 
 The editor can import JSON from another user or an assistant. Imported documents receive a fresh ID. If you manually duplicate a block inside the same note, give its `id` a new value before editing either copy. Use top-level fenced blocks for visual editing; editing blocks nested in blockquotes is not supported in this version. The editor refuses to save when it detects a duplicate ID or a conflicting edit to that visualization. Unrelated edits to the surrounding note are preserved.
 
-Examples are in [examples/](examples/). Documents must contain `version: 1`, a unique `id`, `type`, `title` and `description` plus fields for that type. Limits are 100 steps, 64 blocks and 128 arrows per step, and 500,000 characters in the serialized block. Label and expression limits are checked before rendering.
+Examples are in [examples/](examples/). Documents must contain `version: 1` or `version: 2`, a unique `id`, `type`, `title` and `description` plus fields for that type. Limits are 100 steps, 64 blocks and 128 arrows per step, and 500,000 characters in the serialized block. Label and expression limits are checked before rendering.
 
 No JavaScript or HTML from a document is executed. Formulas are parsed by a restricted mathematical interpreter; they cannot access files, the network or JavaScript objects. Unknown functions and parameters produce validation errors.
 
@@ -79,7 +90,7 @@ Download the three plugin files from [GitHub Releases](https://github.com/MrBeno
 2. Reload Obsidian and enable **Kinetica** under **Settings > Community plugins**.
 3. Copy an example note into the vault, or run **Create visualization**.
 
-Minimum API version: Obsidian 1.8.7. Live desktop verification was performed on Obsidian 1.14.4 for macOS. The code avoids Node/Electron APIs and adapts to narrow screens, but mobile devices and other desktop operating systems have not been tested yet. Validation details remain in English when the Russian interface is selected.
+Minimum API version: Obsidian 1.8.7. Live desktop verification was performed on Obsidian 1.14.4 for macOS. The code avoids Node/Electron APIs and adapts to narrow screens, but mobile devices and other desktop operating systems have not been tested yet. Validation messages are translated into Russian.
 
 This plugin runs offline. It uses no accounts, remote services, telemetry or external scripts. It reads and writes the notes you create or edit, and saves its language setting in its own plugin directory.
 
@@ -106,7 +117,7 @@ Tests cover expression parsing, invalid input, serialization, concurrent edit pr
 
 ## Distribution
 
-See [RELEASING.md](RELEASING.md) for build, release and community-directory submission steps. The release tag must match the manifest version without a `v` prefix, currently `0.2.1`.
+See [RELEASING.md](RELEASING.md) for build, release and community-directory submission steps. The release tag must match the manifest version without a `v` prefix, currently `0.3.0`.
 
 Follow the current [Obsidian submission guide](https://docs.obsidian.md/Plugins/Releasing/Submit%20your%20plugin) for community-directory submission. No repository, release or submission is created by the build scripts.
 
