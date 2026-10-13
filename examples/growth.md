@@ -1,0 +1,32 @@
+```motion
+{
+  "version": 1,
+  "id": "dc561d35-6920-4fd9-a9a8-34e4f60c23d5",
+  "title": "Exponential growth",
+  "description": "Move the sliders to see how each parameter changes the curve.",
+  "type": "plot",
+  "xMin": 0,
+  "xMax": 10,
+  "yMin": 0,
+  "yMax": 30,
+  "xLabel": "x",
+  "yLabel": "y",
+  "parameters": [
+    {
+      "name": "rate",
+      "label": "Growth rate",
+      "min": 0,
+      "max": 0.5,
+      "step": 0.01,
+      "value": 0.2
+    }
+  ],
+  "curves": [
+    {
+      "label": "exp(rate * x)",
+      "formula": "exp(rate * x)",
+      "color": "blue"
+    }
+  ]
+}
+```

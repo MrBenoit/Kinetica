@@ -1,0 +1,37 @@
+{
+  "name": "kinetica",
+  "version": "0.1.0",
+  "description": "Create step-by-step scenes and interactive function plots in your notes.",
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc --noEmit && node scripts/build.mjs",
+    "dev": "node scripts/build.mjs --watch",
+    "test": "vitest run",
+    "lint": "eslint src tests",
+    "format": "prettier --write src tests styles.css *.json *.mjs scripts/*.mjs README.md",
+    "format:check": "prettier --check src tests styles.css *.json *.mjs scripts/*.mjs README.md",
+    "check": "npm run lint && npm test && npm run build && npm run format:check"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.4",
+    "@types/node": "^22.15.17",
+    "esbuild": "0.25.5",
+    "eslint": "^9.39.4",
+    "jsdom": "^27.0.0",
+    "obsidian": "^1.8.7",
+    "prettier": "^3.6.2",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.46.1",
+    "vitest": "^3.2.4"
+  },
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MrBenoit/Kinetica.git"
+  },
+  "bugs": {
+    "url": "https://github.com/MrBenoit/Kinetica/issues"
+  },
+  "homepage": "https://github.com/MrBenoit/Kinetica#readme"
+}

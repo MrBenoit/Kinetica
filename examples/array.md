@@ -1,0 +1,90 @@
+```motion
+{
+  "version": 1,
+  "id": "c4247d22-555f-4c28-b11f-653d7685f8c8",
+  "title": "Append beyond capacity",
+  "description": "A slice moves to a larger backing array when its capacity is exhausted.",
+  "type": "scene",
+  "duration": 2600,
+  "steps": [
+    {
+      "title": "Before append",
+      "description": "The slice points to a full array.",
+      "code": "s := []int{10, 20}",
+      "nodes": [
+        {
+          "id": "slice",
+          "label": "slice",
+          "value": "len=2, cap=2",
+          "x": 55,
+          "y": 70,
+          "color": "purple",
+          "highlighted": false
+        },
+        {
+          "id": "array",
+          "label": "Old array",
+          "value": "[10, 20]",
+          "x": 350,
+          "y": 70,
+          "color": "blue",
+          "highlighted": false
+        }
+      ],
+      "edges": [
+        {
+          "from": "slice",
+          "to": "array",
+          "label": "data"
+        }
+      ]
+    },
+    {
+      "title": "Allocate and copy",
+      "description": "Copy the old elements into a larger array and append 30. The exact new capacity is implementation-dependent.",
+      "code": "s = append(s, 30)",
+      "nodes": [
+        {
+          "id": "slice",
+          "label": "slice",
+          "value": "len=3, cap>=3",
+          "x": 55,
+          "y": 70,
+          "color": "purple",
+          "highlighted": true
+        },
+        {
+          "id": "array",
+          "label": "Old array",
+          "value": "[10, 20]",
+          "x": 350,
+          "y": 70,
+          "color": "blue",
+          "highlighted": false
+        },
+        {
+          "id": "new",
+          "label": "New array",
+          "value": "[10, 20, 30]",
+          "x": 350,
+          "y": 260,
+          "color": "green",
+          "highlighted": true
+        }
+      ],
+      "edges": [
+        {
+          "from": "slice",
+          "to": "new",
+          "label": "data"
+        },
+        {
+          "from": "array",
+          "to": "new",
+          "label": "copy"
+        }
+      ]
+    }
+  ]
+}
+```
