@@ -1,6 +1,6 @@
 {
   "name": "kinetica",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Create step-by-step scenes and interactive function plots in your notes.",
   "type": "module",
   "license": "MIT",

@@ -1,4 +1,4 @@
-import { PluginSettingTab, Setting } from "obsidian";
+import { PluginSettingTab, Setting, requireApiVersion } from "obsidian";
 import type { App, Plugin, SettingDefinition } from "obsidian";
 import type { Language, Translate } from "./i18n";
 export interface Settings {
@@ -60,7 +60,7 @@ export class MotionSettings extends PluginSettingTab {
     await this.owner.saveData(settings);
     this.owner.settings = settings;
     this.owner.updateLanguage();
-    if (typeof this.update === "function") this.update();
+    if (requireApiVersion("1.13.0")) this.update();
     else this.renderLegacy();
   }
   // Hosts before 1.13 do not render setting definitions

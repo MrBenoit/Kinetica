@@ -1,6 +1,8 @@
 // @vitest-environment jsdom
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type { App } from "obsidian";
+import * as obsidian from "obsidian";
+afterEach(() => vi.restoreAllMocks());
 import { MotionSettings, type SettingsPlugin } from "../src/settings";
 import { translator } from "../src/i18n";
 function setup() {
@@ -57,6 +59,7 @@ describe("language settings", () => {
   });
   it("renders and saves through the legacy dropdown without the new API", async () => {
     const { tab, plugin } = setup();
+    vi.spyOn(obsidian, "requireApiVersion").mockReturnValue(false);
     Object.defineProperty(tab, "update", { value: undefined });
     tab.display();
     expect(

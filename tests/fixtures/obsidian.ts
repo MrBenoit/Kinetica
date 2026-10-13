@@ -1,3 +1,4 @@
+export const requireApiVersion = (): boolean => true;
 export class PluginSettingTab {
   containerEl = document.createElement("div");
   update() {}
