@@ -1,3 +1,4 @@
+import { localizeError, translator, type Translate } from "./i18n";
 export function el<K extends keyof HTMLElementTagNameMap>(
   parent: HTMLElement,
   tag: K,
@@ -90,5 +91,7 @@ export function svg<K extends keyof SVGElementTagNameMap>(
 }
 export const formatNumber = (n: number): string =>
   Math.abs(n) < 1e-10 ? "0" : Number(n.toPrecision(5)).toString();
-export const errorMessage = (error: unknown): string =>
-  error instanceof Error ? error.message : String(error);
+export const errorMessage = (
+  error: unknown,
+  t: Translate = translator("en"),
+): string => localizeError(error, t);

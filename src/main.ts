@@ -191,7 +191,7 @@ export default class Kinetica extends Plugin {
               "Не удалось показать визуализацию",
             ),
           );
-          el(element, "p", "mn-error", errorMessage(error));
+          el(element, "p", "mn-error", errorMessage(error, this.t));
           button(
             element,
             this.t("Open note source", "Открыть исходник заметки"),
@@ -238,7 +238,7 @@ export default class Kinetica extends Plugin {
         if (!file || file.extension !== "md") return false;
         if (!checking)
           void this.choose(file).catch(
-            (error) => new Notice(errorMessage(error)),
+            (error) => new Notice(errorMessage(error, this.t)),
           );
         return true;
       },

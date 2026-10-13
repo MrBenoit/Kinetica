@@ -11,9 +11,9 @@
 
 Write `docs/release-notes-<version>.md`, commit it with the version updates and push `main`. Push a tag matching the manifest version exactly, without a `v` prefix.
 
-The Release workflow checks the metadata, runs all checks and generates provenance attestations for the three installable files. It uploads them to a draft release and publishes only after every upload succeeds. A retry can resume a draft, but refuses to replace a published release. Fix an already published version by releasing a new version.
+The Release workflow checks the metadata, runs all checks and generates provenance attestations for the three plugin files and both HTML viewer files. It uploads them to a draft release and publishes only after every upload succeeds. A retry can resume a draft, but refuses to replace a published release. Fix an already published version by releasing a new version.
 
-Download the assets and verify their attestations with `gh attestation verify main.js --repo MrBenoit/Kinetica`. Repeat for `styles.css` and `manifest.json`. Only these three files belong in a release. The source archives are supplied by GitHub.
+Download the assets and verify their attestations with `gh attestation verify main.js --repo MrBenoit/Kinetica`. Repeat for `styles.css` and `manifest.json`. Also verify `kinetica.js` and `kinetica-example.html`. These two assets are for web users; the Obsidian installer ignores them. The directory may recommend removing unsupported files, but they are intentional downloads for HTML embedding. The source archives are supplied by GitHub.
 
 ## Submit to the community directory
 

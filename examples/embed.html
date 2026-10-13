@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kinetica in HTML</title>
+  <script src="./kinetica.js" defer></script>
+  <style>
+    :root { color-scheme: dark; }
+    body { max-width: 960px; margin: auto; padding: 32px 20px; background: #10131c; color: #eef2fb; font: 16px/1.5 system-ui, sans-serif; }
+    h1 { font-size: 42px; margin: 0; }
+    header p { color: #aab7ce; }
+    section { margin: 32px 0; }
+    code { color: #b3c1ff; }
+  </style>
+</head>
+<body>
+  <header><h1>Kinetica in HTML</h1><p>Two interactive explanations. One script. No Obsidian required.</p><label>Language / Язык <select id="language"><option value="en">English</option><option value="ru">Русский</option></select></label></header>
+  <section>
+    <h2>Explore a function</h2>
+    <kinetica-player theme="dark">
+      <script type="application/json">
+{
+  "version": 1,
+  "id": "96a6efd1-6b47-40f8-a7c3-01d1c2c17ad3",
+  "title": "Explore a wave",
+  "description": "Move the sliders to see how each parameter changes the curve.",
+  "type": "plot",
+  "xLabel": "x",
+  "yLabel": "y",
+  "xMin": -6.3,
+  "xMax": 6.3,
+  "yMin": -5,
+  "yMax": 5,
+  "parameters": [
+    {
+      "name": "a",
+      "label": "Amplitude",
+      "min": 0,
+      "max": 4,
+      "step": 0.1,
+      "value": 2
+    },
+    {
+      "name": "b",
+      "label": "Frequency",
+      "min": 0.2,
+      "max": 4,
+      "step": 0.1,
+      "value": 1
+    }
+  ],
+  "curves": [
+    {
+      "label": "a * sin(b * x)",
+      "formula": "a * sin(b * x)",
+      "color": "blue"
+    }
+  ]
+}
+      </script>
+    </kinetica-player>
+  </section>
+  <section>
+    <h2>Follow a process</h2>
+    <kinetica-player theme="dark">
+      <script type="application/json">
+{
+  "version": 1,
+  "id": "2f4f1294-5461-4579-bc44-346da4cffef6",
+  "title": "Message delivery",
+  "description": "Step through the delivery, then edit the scene to tell your own story.",
+  "type": "scene",
+  "duration": 2200,
+  "steps": [
+    {
+      "title": "Prepare",
+      "description": "The sender prepares a value.",
+      "code": "value := 42",
+      "nodes": [
+        {
+          "id": "sender",
+          "label": "Sender",
+          "value": "Ready",
+          "x": 60,
+          "y": 155,
+          "color": "blue",
+          "highlighted": true
+        },
+        {
+          "id": "message",
+          "label": "Message",
+          "value": "42",
+          "x": 275,
+          "y": 155,
+          "color": "orange",
+          "highlighted": false
+        },
+        {
+          "id": "receiver",
+          "label": "Receiver",
+          "value": "Waiting",
+          "x": 570,
+          "y": 155,
+          "color": "green",
+          "highlighted": false
+        }
+      ],
+      "edges": []
+    },
+    {
+      "title": "Send",
+      "description": "The value travels to the receiver.",
+      "code": "ch \u003c- value",
+      "nodes": [
+        {
+          "id": "sender",
+          "label": "Sender",
+          "value": "Ready",
+          "x": 60,
+          "y": 155,
+          "color": "blue",
+          "highlighted": false
+        },
+        {
+          "id": "message",
+          "label": "Message",
+          "value": "42",
+          "x": 385,
+          "y": 260,
+          "color": "orange",
+          "highlighted": true
+        },
+        {
+          "id": "receiver",
+          "label": "Receiver",
+          "value": "Waiting",
+          "x": 570,
+          "y": 155,
+          "color": "green",
+          "highlighted": false
+        }
+      ],
+      "edges": [
+        {
+          "from": "sender",
+          "to": "receiver",
+          "label": "channel"
+        }
+      ]
+    },
+    {
+      "title": "Receive",
+      "description": "The receiver reads the value.",
+      "code": "value := \u003c-ch",
+      "nodes": [
+        {
+          "id": "sender",
+          "label": "Sender",
+          "value": "Ready",
+          "x": 60,
+          "y": 155,
+          "color": "blue",
+          "highlighted": false
+        },
+        {
+          "id": "message",
+          "label": "Message",
+          "value": "42",
+          "x": 570,
+          "y": 275,
+          "color": "orange",
+          "highlighted": false
+        },
+        {
+          "id": "receiver",
+          "label": "Receiver",
+          "value": "42",
+          "x": 570,
+          "y": 155,
+          "color": "green",
+          "highlighted": true
+        }
+      ],
+      "edges": [
+        {
+          "from": "sender",
+          "to": "receiver",
+          "label": "delivered"
+        }
+      ]
+    }
+  ]
+}
+      </script>
+    </kinetica-player>
+  </section>
+  <footer>Save this HTML file beside <code>kinetica.js</code> and open it in a browser. All data stays in this page.</footer>
+
+  <script>
+    const examples = {"en":[{"version":1,"id":"3b976074-85ea-4bf5-bfc1-080909b42388","title":"Explore a wave","description":"Move the sliders to see how each parameter changes the curve.","type":"plot","xLabel":"x","yLabel":"y","xMin":-6.3,"xMax":6.3,"yMin":-5,"yMax":5,"parameters":[{"name":"a","label":"Amplitude","min":0,"max":4,"step":0.1,"value":2},{"name":"b","label":"Frequency","min":0.2,"max":4,"step":0.1,"value":1}],"curves":[{"label":"a * sin(b * x)","formula":"a * sin(b * x)","color":"blue"}]},{"version":1,"id":"582ba9b1-b960-4628-8e40-df8af5748c2c","title":"Message delivery","description":"Step through the delivery, then edit the scene to tell your own story.","type":"scene","duration":2200,"steps":[{"title":"Prepare","description":"The sender prepares a value.","code":"value := 42","nodes":[{"id":"sender","label":"Sender","value":"Ready","x":60,"y":155,"color":"blue","highlighted":true},{"id":"message","label":"Message","value":"42","x":275,"y":155,"color":"orange","highlighted":false},{"id":"receiver","label":"Receiver","value":"Waiting","x":570,"y":155,"color":"green","highlighted":false}],"edges":[]},{"title":"Send","description":"The value travels to the receiver.","code":"ch \u003c- value","nodes":[{"id":"sender","label":"Sender","value":"Ready","x":60,"y":155,"color":"blue","highlighted":false},{"id":"message","label":"Message","value":"42","x":385,"y":260,"color":"orange","highlighted":true},{"id":"receiver","label":"Receiver","value":"Waiting","x":570,"y":155,"color":"green","highlighted":false}],"edges":[{"from":"sender","to":"receiver","label":"channel"}]},{"title":"Receive","description":"The receiver reads the value.","code":"value := \u003c-ch","nodes":[{"id":"sender","label":"Sender","value":"Ready","x":60,"y":155,"color":"blue","highlighted":false},{"id":"message","label":"Message","value":"42","x":570,"y":275,"color":"orange","highlighted":false},{"id":"receiver","label":"Receiver","value":"42","x":570,"y":155,"color":"green","highlighted":true}],"edges":[{"from":"sender","to":"receiver","label":"delivered"}]}]}],"ru":[{"version":1,"id":"ca633370-4edd-433d-8fa0-228fb5e40871","title":"Исследуй волну","description":"Двигай ползунки и наблюдай, как параметры меняют кривую.","type":"plot","xLabel":"x","yLabel":"y","xMin":-6.3,"xMax":6.3,"yMin":-5,"yMax":5,"parameters":[{"name":"a","label":"Амплитуда","min":0,"max":4,"step":0.1,"value":2},{"name":"b","label":"Частота","min":0.2,"max":4,"step":0.1,"value":1}],"curves":[{"label":"a * sin(b * x)","formula":"a * sin(b * x)","color":"blue"}]},{"version":1,"id":"4137c1ca-3d27-45a7-86a7-c347d7561bc5","title":"Передача сообщения","description":"Пройди шаги передачи, затем отредактируй сцену для своего объяснения.","type":"scene","duration":2200,"steps":[{"title":"Подготовка","description":"Отправитель готовит значение.","code":"value := 42","nodes":[{"id":"sender","label":"Отправитель","value":"Готов","x":60,"y":155,"color":"blue","highlighted":true},{"id":"message","label":"Сообщение","value":"42","x":275,"y":155,"color":"orange","highlighted":false},{"id":"receiver","label":"Получатель","value":"Ожидает","x":570,"y":155,"color":"green","highlighted":false}],"edges":[]},{"title":"Передача","description":"Значение передаётся получателю.","code":"ch \u003c- value","nodes":[{"id":"sender","label":"Отправитель","value":"Готов","x":60,"y":155,"color":"blue","highlighted":false},{"id":"message","label":"Сообщение","value":"42","x":385,"y":260,"color":"orange","highlighted":true},{"id":"receiver","label":"Получатель","value":"Ожидает","x":570,"y":155,"color":"green","highlighted":false}],"edges":[{"from":"sender","to":"receiver","label":"channel"}]},{"title":"Получение","description":"Получатель читает значение.","code":"value := \u003c-ch","nodes":[{"id":"sender","label":"Отправитель","value":"Готов","x":60,"y":155,"color":"blue","highlighted":false},{"id":"message","label":"Сообщение","value":"42","x":570,"y":275,"color":"orange","highlighted":false},{"id":"receiver","label":"Получатель","value":"42","x":570,"y":155,"color":"green","highlighted":true}],"edges":[{"from":"sender","to":"receiver","label":"доставлено"}]}]}]};
+    const copy = {
+      en: ['Kinetica in HTML', 'Two interactive explanations. One script. No Obsidian required.', 'Explore a function', 'Follow a process', 'Save this HTML file beside kinetica.js and open it in a browser. All data stays in this page.'],
+      ru: ['Kinetica в HTML', 'Два интерактивных примера. Один скрипт. Obsidian не нужен.', 'Исследуй функцию', 'Пройди процесс по шагам', 'Сохрани этот HTML рядом с kinetica.js и открой в браузере. Все данные хранятся на этой странице.']
+    };
+    document.getElementById('language').addEventListener('change', (event) => {
+      const language = event.target.value;
+      document.documentElement.lang = language;
+      const text = copy[language];
+      document.title = text[0];
+      document.querySelector('h1').textContent = text[0];
+      document.querySelector('header p').textContent = text[1];
+      document.querySelectorAll('h2').forEach((heading, index) => heading.textContent = text[index + 2]);
+      document.querySelector('footer').textContent = text[4];
+      document.querySelectorAll('kinetica-player').forEach((player, index) => {
+        player.querySelector('script').textContent = JSON.stringify(examples[language][index]);
+        player.refresh();
+      });
+    });
+  </script>
+</body>
+</html>

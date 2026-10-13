@@ -83,6 +83,12 @@ Minimum API version: Obsidian 1.8.7. Live desktop verification was performed on 
 
 This plugin runs offline. It uses no accounts, remote services, telemetry or external scripts. It reads and writes the notes you create or edit, and saves its language setting in its own plugin directory.
 
+## Use it on an HTML page
+
+The standalone viewer works without Obsidian. Download `kinetica.js` and `kinetica-example.html` from the release, keep them together and open the HTML file. To embed your own document, use a `<kinetica-player>` element with the JSON from a motion block.
+
+See [HTML embedding](docs/html-embedding.md) for the full copyable example, theme options, script escaping and limitations. The same scene and graph format works in notes and web pages.
+
 ## Development
 
 Use Node.js 22. Install and run checks:
@@ -100,7 +106,7 @@ Tests cover expression parsing, invalid input, serialization, concurrent edit pr
 
 ## Distribution
 
-See [RELEASING.md](RELEASING.md) for build, release and community-directory submission steps. The release tag must match the manifest version without a `v` prefix, currently `0.1.1`.
+See [RELEASING.md](RELEASING.md) for build, release and community-directory submission steps. The release tag must match the manifest version without a `v` prefix, currently `0.2.0`.
 
 Follow the current [Obsidian submission guide](https://docs.obsidian.md/Plugins/Releasing/Submit%20your%20plugin) for community-directory submission. No repository, release or submission is created by the build scripts.
 

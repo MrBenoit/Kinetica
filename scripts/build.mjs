@@ -14,5 +14,19 @@ const options = {
 await mkdir("dist", { recursive: true });
 for (const file of ["manifest.json", "styles.css"])
   await copyFile(file, `dist/${file}`);
-if (process.argv.includes("--watch")) await (await context(options)).watch();
-else await build(options);
+const webOptions = {
+  ...options,
+  entryPoints: ["src/embed.ts"],
+  external: [],
+  format: "iife",
+  outfile: "dist/kinetica.js",
+  loader: { ".css": "text" },
+};
+await copyFile("examples/embed.html", "dist/kinetica-example.html");
+if (process.argv.includes("--watch")) {
+  await (await context(options)).watch();
+  await (await context(webOptions)).watch();
+} else {
+  await build(options);
+  await build(webOptions);
+}

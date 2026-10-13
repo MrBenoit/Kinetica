@@ -240,7 +240,7 @@ export class Editor {
         this.draft.id = uid();
         this.render();
       } catch (e) {
-        error.textContent = errorMessage(e);
+        error.textContent = errorMessage(e, this.t);
       }
     });
   }
@@ -772,7 +772,7 @@ export class Editor {
       if (this.error)
         this.error.textContent =
           this.t("Check the document: ", "Проверь документ: ") +
-          errorMessage(error);
+          errorMessage(error, this.t);
       if (this.saveButton) this.saveButton.disabled = true;
     }
     const buttons = this.root.querySelectorAll<HTMLButtonElement>(
@@ -792,7 +792,7 @@ export class Editor {
     } catch (error) {
       this.error!.textContent =
         this.t("Could not save: ", "Не удалось сохранить: ") +
-        errorMessage(error);
+        errorMessage(error, this.t);
     } finally {
       this.saving = false;
       if (this.saveButton) this.saveButton.disabled = false;

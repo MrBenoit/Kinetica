@@ -33,6 +33,8 @@ jobs:
             dist/main.js
             dist/manifest.json
             dist/styles.css
+            dist/kinetica.js
+            dist/kinetica-example.html
       - name: Publish verified files
         env:
           GH_TOKEN: ${{ github.token }}
@@ -48,5 +50,5 @@ jobs:
           else
             gh release create "$tag" --verify-tag --draft --title "Kinetica $tag beta" --notes-file "docs/release-notes-$tag.md"
           fi
-          gh release upload "$tag" dist/main.js dist/manifest.json dist/styles.css --clobber
+          gh release upload "$tag" dist/main.js dist/manifest.json dist/styles.css dist/kinetica.js dist/kinetica-example.html --clobber
           gh release edit "$tag" --draft=false --latest
