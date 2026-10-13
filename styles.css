@@ -462,8 +462,9 @@
   }
 }
 
-.mn-player [hidden] {
-  display: none !important;
+.mn-player .mn-toolbar[hidden],
+.mn-player .mn-timeline[hidden] {
+  display: none;
 }
 .mn-code-lines {
   padding: 8px 0;

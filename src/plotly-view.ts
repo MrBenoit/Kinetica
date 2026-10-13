@@ -1,3 +1,4 @@
+import { plotlySource } from "./plotly-source";
 import type { PlotlyDocument } from "./model";
 import type { Translate } from "./i18n";
 import { el } from "./ui";
@@ -16,7 +17,7 @@ export function plotlyHTML(
   token: string,
 ): string {
   const payload = scriptJSON({ figure: motion.figure, dark, language, token });
-  const source = PLOTLY_SOURCE.replace(/<\/script/gi, "<\\/script");
+  const source = plotlySource.replace(/<\/script/gi, "<\\/script");
   return `<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval'; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; connect-src 'none'; worker-src blob:;"><style>html,body{margin:0;width:100%;height:100%;background:${dark ? "#20202c" : "#ffffff"}}#plot{width:100%;height:100%}p{font:16px sans-serif;color:${dark ? "white" : "black"};padding:20px}</style></head><body><div id="plot"></div><script>${source}</script><script>
 const input=${payload};
 const figure=input.figure;

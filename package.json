@@ -1,6 +1,6 @@
 {
   "name": "kinetica",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Create step-by-step scenes and interactive function plots in your notes.",
   "type": "module",
   "license": "MIT",
@@ -18,12 +18,13 @@
     "@types/node": "^22.15.17",
     "esbuild": "0.25.5",
     "eslint": "^9.39.4",
+    "eslint-plugin-obsidianmd": "0.4.2",
     "jsdom": "^27.0.0",
     "obsidian": "^1.8.7",
     "prettier": "^3.6.2",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.46.1",
-    "vitest": "^3.2.4"
+    "vitest": "4.1.11"
   },
   "private": true,
   "repository": {
@@ -37,5 +38,11 @@
   "dependencies": {
     "plotly.js-dist-min": "4.1.2",
     "plotly.js-locales": "4.1.2"
+  },
+  "imports": {
+    "#dom": "./src/dom-obsidian.ts"
+  },
+  "overrides": {
+    "moment": "2.31.0"
   }
 }

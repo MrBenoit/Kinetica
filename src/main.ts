@@ -1,3 +1,4 @@
+import { browserRuntime } from "./browser-runtime";
 import {
   App,
   getLanguage,
@@ -398,7 +399,7 @@ export default class Kinetica extends Plugin {
       path = normalizePath(`${folder}/${name} ${suffix++}.html`);
     const html = standaloneHTML(
       motion,
-      KINETICA_RUNTIME,
+      browserRuntime(),
       this.t("en", "ru") as "en" | "ru",
       this.app.workspace.containerEl.ownerDocument.body.classList.contains(
         "theme-dark",

@@ -1,6 +1,26 @@
 import js from "@eslint/js";
 import ts from "typescript-eslint";
-export default ts.config(js.configs.recommended, ...ts.configs.recommended, {
-  files: ["**/*.ts"],
-  rules: { "@typescript-eslint/no-explicit-any": "error" },
-});
+import obsidian from "eslint-plugin-obsidianmd";
+export default ts.config(
+  js.configs.recommended,
+  ...ts.configs.recommended,
+  {
+    files: ["**/*.ts"],
+    rules: { "@typescript-eslint/no-explicit-any": "error" },
+  },
+  {
+    files: ["src/**/*.ts"],
+    languageOptions: {
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+    plugins: { obsidianmd: obsidian },
+    rules: {
+      "obsidianmd/prefer-create-el": "error",
+      "@typescript-eslint/only-throw-error": "error",
+      "@typescript-eslint/no-unnecessary-type-assertion": "error",
+    },
+  },
+);

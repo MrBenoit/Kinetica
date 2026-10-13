@@ -1,3 +1,4 @@
+import { createHTML } from "#dom";
 import { Player } from "./player";
 import { parseMotion } from "./model";
 import { translator } from "./i18n";
@@ -12,10 +13,9 @@ export class KineticaPlayer extends HTMLElement {
   constructor() {
     super();
     const root = this.attachShadow({ mode: "open" });
-    const style = this.ownerDocument.createElement("style");
+    const style = createHTML(root, "style");
     style.textContent = playerStyles + embedStyles;
-    this.content = this.ownerDocument.createElement("div");
-    root.append(style, this.content);
+    this.content = createHTML(root, "div");
   }
   connectedCallback() {
     if (this.ownerDocument.readyState === "loading")
@@ -61,14 +61,13 @@ export class KineticaPlayer extends HTMLElement {
       this.player = new Player(this.content, motion, t);
     } catch (error) {
       const message = errorMessage(error, t);
-      const alert = this.ownerDocument.createElement("p");
+      const alert = createHTML(this.content, "p");
       alert.setAttribute("role", "alert");
       alert.textContent =
         t(
           "Cannot display visualization: ",
           "Не удалось показать визуализацию: ",
         ) + message;
-      this.content.append(alert);
       this.dispatchEvent(
         new CustomEvent("kinetica-error", {
           detail: { message },

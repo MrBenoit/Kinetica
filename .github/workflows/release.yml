@@ -1,7 +1,7 @@
 name: Release
 on:
   push:
-    tags: ['*']
+    tags: ['[0-9]*']
 permissions:
   contents: read
 concurrency:
@@ -50,5 +50,14 @@ jobs:
           else
             gh release create "$tag" --verify-tag --draft --title "Kinetica $tag beta" --notes-file "docs/release-notes-$tag.md"
           fi
-          gh release upload "$tag" dist/main.js dist/manifest.json dist/styles.css dist/kinetica.js dist/kinetica-example.html --clobber
+          web_tag="html-$tag"
+          if ! gh release view "$web_tag" --json isDraft --jq '.isDraft' > web-release-state.txt; then
+            gh release create "$web_tag" --target "$GITHUB_SHA" --draft --prerelease --title "Kinetica HTML $tag" --notes-file docs/html-release-notes.md
+            printf 'true\n' > web-release-state.txt
+          fi
+          if [ "$(cat web-release-state.txt)" = true ]; then
+            gh release upload "$web_tag" dist/kinetica.js dist/kinetica-example.html --clobber
+            gh release edit "$web_tag" --draft=false --prerelease --latest=false
+          fi
+          gh release upload "$tag" dist/main.js dist/manifest.json dist/styles.css --clobber
           gh release edit "$tag" --draft=false --latest

@@ -70,7 +70,7 @@ Plots sample 401 points across the X range. Undefined results are omitted and la
 - Import Plotly figure JSON created with Python, including offline scientific and 3D plots
 - Export any visualization as one standalone HTML file
 
-Read [Learning tools](docs/learning.md) for creation steps, Python examples and limits. The full Plotly runtime is included locally. Python scripts are not executed. Geographic maps and remote resources are not supported. Full Plotly makes the viewer about 5 MB and the plugin about 10 MB.
+Read [Learning tools](docs/learning.md) for creation steps, Python examples and limits. The full Plotly runtime is included locally. Python scripts are not executed. Geographic maps and remote resources are not supported. Full Plotly makes the viewer about 5 MB. The plugin shares one Plotly payload with its HTML exporter and stays below 5 MB.
 
 ## Portable documents
 
@@ -96,7 +96,7 @@ This plugin runs offline. It uses no accounts, remote services, telemetry or ext
 
 ## Use it on an HTML page
 
-The standalone viewer works without Obsidian. Download `kinetica.js` and `kinetica-example.html` from the release, keep them together and open the HTML file. To embed your own document, use a `<kinetica-player>` element with the JSON from a motion block.
+The standalone viewer works without Obsidian. Download `kinetica.js` and `kinetica-example.html` from the [HTML release](https://github.com/MrBenoit/Kinetica/releases/tag/html-0.3.1), keep them together and open the HTML file. To embed your own document, use a `<kinetica-player>` element with the JSON from a motion block.
 
 See [HTML embedding](docs/html-embedding.md) for the full copyable example, theme options, script escaping and limitations. The same scene and graph format works in notes and web pages.
 
@@ -117,7 +117,7 @@ Tests cover expression parsing, invalid input, serialization, concurrent edit pr
 
 ## Distribution
 
-See [RELEASING.md](RELEASING.md) for build, release and community-directory submission steps. The release tag must match the manifest version without a `v` prefix, currently `0.3.0`.
+See [RELEASING.md](RELEASING.md) for build, release and community-directory submission steps. The release tag must match the manifest version without a `v` prefix, currently `0.3.1`.
 
 Follow the current [Obsidian submission guide](https://docs.obsidian.md/Plugins/Releasing/Submit%20your%20plugin) for community-directory submission. No repository, release or submission is created by the build scripts.
 

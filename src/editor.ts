@@ -43,7 +43,7 @@ export class Editor {
   private error?: HTMLElement;
   private saveButton?: HTMLButtonElement;
   private saving = false;
-  private figureError?: unknown;
+  private figureError?: Error;
   private pendingFigureSource?: string;
   constructor(
     private root: HTMLElement,
@@ -997,7 +997,8 @@ export class Editor {
             m.figure = figure;
           });
         } catch (error) {
-          this.figureError = error;
+          this.figureError =
+            error instanceof Error ? error : new Error(String(error));
           this.refreshPreview();
         }
       },

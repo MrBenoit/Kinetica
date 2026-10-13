@@ -146,8 +146,8 @@ export function validateMotion(input: unknown): Motion {
   const m = object(input, "document");
   if (m.version !== 1 && m.version !== 2)
     throw new Error("Unsupported document version");
-  const base = {
-    version: m.version as 1 | 2,
+  const base: Base = {
+    version: m.version,
     id: ident(m.id, "id"),
     title: str(m.title, "title", 120),
     description: str(m.description, "description"),

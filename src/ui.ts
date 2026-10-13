@@ -1,3 +1,4 @@
+import { createHTML, createSVG } from "#dom";
 import { localizeError, translator, type Translate } from "./i18n";
 export function el<K extends keyof HTMLElementTagNameMap>(
   parent: HTMLElement,
@@ -5,10 +6,9 @@ export function el<K extends keyof HTMLElementTagNameMap>(
   className = "",
   text = "",
 ): HTMLElementTagNameMap[K] {
-  const child = parent.ownerDocument.createElement(tag);
+  const child = createHTML(parent, tag);
   if (className) child.className = className;
   if (text) child.textContent = text;
-  parent.append(child);
   return child;
 }
 export function button(
@@ -79,14 +79,10 @@ export function svg<K extends keyof SVGElementTagNameMap>(
   attrs: Record<string, string | number> = {},
   text = "",
 ): SVGElementTagNameMap[K] {
-  const child = parent.ownerDocument.createElementNS(
-    "http://www.w3.org/2000/svg",
-    tag,
-  );
+  const child = createSVG(parent, tag);
   for (const [key, value] of Object.entries(attrs))
     child.setAttribute(key, String(value));
   if (text) child.textContent = text;
-  parent.append(child);
   return child;
 }
 export const formatNumber = (n: number): string =>

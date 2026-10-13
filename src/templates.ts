@@ -45,15 +45,16 @@ export function template(kind: Template, t: Translate): Motion {
       "Two free slots remain in the backing array.",
       "В базовом массиве остаются два свободных места.",
     );
-    right.steps[1] = clone(right.steps[0]!);
-    right.steps[1]!.title = t("Reuse the array", "Используем прежний массив");
-    right.steps[1]!.description = t(
+    const next = clone(right.steps[0]!);
+    right.steps[1] = next;
+    next.title = t("Reuse the array", "Используем прежний массив");
+    next.description = t(
       "Write 30 into the next slot. No new array is needed.",
       "Записываем 30 в следующую ячейку. Новый массив не нужен.",
     );
-    right.steps[1]!.code = "s = append(s, 30)";
-    right.steps[1]!.nodes[0]!.value = "len=3, cap=4";
-    right.steps[1]!.nodes[1]!.value = "[10, 20, 30, 0]";
+    next.code = "s = append(s, 30)";
+    next.nodes[0]!.value = "len=3, cap=4";
+    next.nodes[1]!.value = "[10, 20, 30, 0]";
     return {
       ...base,
       version: 2,

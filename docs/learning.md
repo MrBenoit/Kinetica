@@ -47,4 +47,4 @@ Documents remain limited to 500,000 serialized characters. Plotly input is addit
 
 Click **Export HTML** in a player or editor, or run **Export visualization as HTML** from the command palette. The file is saved beside the source note. Existing files are preserved by adding a numeric suffix. A notice shows the saved path.
 
-The file contains the document, styles and entire browser runtime, including Plotly. It works without a CDN, Obsidian or Python. It is about 5 MB even for a small scene because the runtime includes full Plotly. The plugin bundle is about 10 MB because it includes both the viewer and export runtime. Language and theme are captured at export time. Sharing this file shares the visualization's content.
+The file contains the document, styles and entire browser runtime, including Plotly. It works without a CDN, Obsidian or Python. It is about 5 MB even for a small scene because the runtime includes full Plotly. The plugin bundle is below 5 MB by sharing one Plotly payload between playback and export. Language and theme are captured at export time. Sharing this file shares the visualization's content.
