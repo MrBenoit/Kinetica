@@ -11,9 +11,9 @@ Kinetica is an early beta. It has not been submitted to the Obsidian community d
 
 [Get started](#install-the-beta) | [Examples](examples/) | [Contributing](CONTRIBUTING.md)
 
-![Interactive function plot](docs/images/plot.png)
+![Interactive function plot](docs/images/plot.jpg)
 
-The example above shows the Russian interface. English is also supported.
+The interface supports English and Russian and follows your Obsidian theme.
 
 ## Create your first visualization
 
