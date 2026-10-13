@@ -1,6 +1,6 @@
 # Embed Kinetica in HTML
 
-Download `kinetica.js` and `kinetica-example.html` from the same [HTML release](https://github.com/MrBenoit/Kinetica/releases/tag/html-0.3.1). Keep them in one folder and open the HTML file in a browser. It also works from a local `file://` URL. No server, Obsidian installation or build tool is required.
+Download `kinetica.js` and `kinetica-example.html` from the same [HTML release](https://github.com/MrBenoit/Kinetica/releases/tag/html-0.3.2). Keep them in one folder and open the HTML file in a browser. It also works from a local `file://` URL. No server, Obsidian installation or build tool is required.
 
 To add a player to an existing page, load the script once and add a custom element for each visualization:
 

@@ -1,4 +1,4 @@
-/* eslint-disable obsidianmd/prefer-create-el -- Standalone HTML runs without Obsidian DOM extensions */
+// Standalone pages do not provide Obsidian DOM helpers
 export function createHTML<K extends keyof HTMLElementTagNameMap>(
   parent: HTMLElement | ShadowRoot,
   tag: K,

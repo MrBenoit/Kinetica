@@ -16,11 +16,15 @@ export default ts.config(
         tsconfigRootDir: import.meta.dirname,
       },
     },
-    plugins: { obsidianmd: obsidian },
     rules: {
-      "obsidianmd/prefer-create-el": "error",
       "@typescript-eslint/only-throw-error": "error",
       "@typescript-eslint/no-unnecessary-type-assertion": "error",
     },
+  },
+  {
+    files: ["src/**/*.ts"],
+    ignores: ["src/dom-browser.ts"],
+    plugins: { obsidianmd: obsidian },
+    rules: { "obsidianmd/prefer-create-el": "error" },
   },
 );
