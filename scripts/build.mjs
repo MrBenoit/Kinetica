@@ -1,24 +1,18 @@
-import { build, context, transform } from "esbuild";
+import { build, context } from "esbuild";
 import { mkdir, copyFile, readFile, writeFile } from "node:fs/promises";
-import { createRequire } from "node:module";
 import assert from "node:assert/strict";
-const require = createRequire(import.meta.url);
-const rawPlotly =
-  (await readFile(require.resolve("plotly.js-dist-min"), "utf8")) +
-  "\nPlotly.register(" +
-  JSON.stringify(require("plotly.js-locales/ru")) +
-  ");";
-const header = `plotly.js v${require("plotly.js-dist-min/package.json").version}`;
+import {
+  buildPlotly,
+  plotlyVersion,
+  supportedTraces,
+} from "./plotly-bundle.mjs";
+const header = `plotly.js v${plotlyVersion}`;
 const plotly =
   `/*! ${header}, MIT license, Copyright Plotly, Inc. */\n` +
-  (
-    await transform(rawPlotly, {
-      minify: true,
-      target: "es2022",
-      charset: "utf8",
-      legalComments: "inline",
-    })
-  ).code;
+  (await buildPlotly());
+console.log(
+  `Plotly ${plotlyVersion}: ${supportedTraces.length} supported trace types`,
+);
 const options = {
   entryPoints: ["src/main.ts"],
   bundle: true,
@@ -46,8 +40,23 @@ const checkSize = async () => {
     "Bundle must contain exactly one Plotly source",
   );
   assert.ok(
-    Buffer.byteLength(source) < 5_000_000,
-    "Plugin exceeds the 5 MB sync budget",
+    Buffer.byteLength(source) < 3_500_000,
+    "Plugin exceeds the 3.5 MB development budget",
+  );
+  await writeFile(
+    "dist/build-report.json",
+    JSON.stringify(
+      {
+        plotlyVersion,
+        supportedTraces,
+        mainBytes: Buffer.byteLength(source),
+        developmentBudgetBytes: 3_500_000,
+        syncLimitBytes: 5_000_000,
+        syncHeadroomBytes: 5_000_000 - Buffer.byteLength(source),
+      },
+      null,
+      2,
+    ) + "\n",
   );
   console.log(
     `Plugin size: ${Buffer.byteLength(source)} bytes, one Plotly copy`,

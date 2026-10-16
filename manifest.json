@@ -1,7 +1,7 @@
 {
   "id": "kinetica",
   "name": "Kinetica",
-  "version": "0.3.2",
+  "version": "0.4.0",
   "minAppVersion": "1.8.7",
   "description": "Create step-by-step scenes and interactive function plots with sliders inside your notes.",
   "author": "Benoit",

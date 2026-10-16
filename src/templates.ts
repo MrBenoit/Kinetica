@@ -1,7 +1,9 @@
+import { galleryExample, type GalleryExample } from "./gallery-examples";
 import type { Motion, SceneNode } from "./model";
 import { uid, clone } from "./model";
 import type { Translate } from "./i18n";
 export type Template =
+  | GalleryExample
   | "flow"
   | "array"
   | "wave"
@@ -14,6 +16,8 @@ export type Template =
   | "queue-compare"
   | "comparison";
 export function template(kind: Template, t: Translate): Motion {
+  if (kind === "stack" || kind === "bubble-sort" || kind === "motion")
+    return galleryExample(kind, t);
   const base = { version: 1 as const, id: uid(), title: "", description: "" };
   if (kind === "queue" || kind === "queue-compare")
     return {

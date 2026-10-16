@@ -298,3 +298,22 @@ it("rejects an export that its own HTML reader cannot reopen", () => {
   }));
   expect(() => standaloneHTML(m, "runtime", "en", false)).toThrow(/500,000/);
 });
+
+it.each([
+  "scattergeo",
+  "choropleth",
+  "scattermap",
+  "scattermapbox",
+  "choroplethmap",
+  "choroplethmapbox",
+  "densitymap",
+  "densitymapbox",
+])("rejects excluded map trace %s in data and animation frames", (type) => {
+  expect(() => validateFigure({ data: [{ type }] })).toThrow("Map traces");
+  expect(() =>
+    validateFigure({
+      data: [{ type: "scatter", x: [1], y: [2] }],
+      frames: [{ data: [{ type }] }],
+    }),
+  ).toThrow("Map traces");
+});

@@ -22,6 +22,10 @@ Limits: 60 jobs, 8 workers, 20 buffer slots, 6 arrivals per tick and 10 ticks pe
 
 Choose **Compare two scenes** and edit each side. Both scenes advance by step number. A shorter scene holds its final state. The shared player uses 1.5 seconds per step. Questions are supported in individual scenes, not inside comparison documents.
 
+## Gallery and shared scene controls
+
+The gallery includes interactive previews, category filters and search. New stack, bubble-sort and motion examples join the existing queue, channel, array and graph examples. See [Scene tools](scene-tools.md) to connect custom sliders to blocks, labels and a graph, or to set timing for individual steps.
+
 ## Import from Python and Plotly
 
 Create the figure outside Obsidian and export its data:
@@ -35,7 +39,7 @@ figure.write_json("figure.json")
 
 In **Create visualization**, expand **Import Plotly / Python**. Choose the JSON file or paste its contents, then click **Import figure**. Edit the title and save. To change a figure later, replace its Plotly JSON in the editor.
 
-The full Plotly.js distribution is bundled locally. Supported offline figures include scatter, bars, heatmaps, scientific plots and 3D traces. Plotly frames, sliders and update menus from the imported figure are kept. Some 3D plots need browser WebGL support. The import also accepts NumPy binary arrays in Python exports.
+A custom Plotly.js build is bundled locally, excluding only geographic modules already rejected by the importer. Supported offline figures include scatter, bars, heatmaps, scientific plots and 3D traces. Plotly frames, sliders and update menus from the imported figure are kept. Some 3D plots need browser WebGL support. The import also accepts NumPy binary arrays in Python exports.
 
 Python itself is not installed or executed by the plugin. Import a figure's JSON, not a Python script or an HTML export. The plugin ignores root-level Plotly configuration and supplies its own offline configuration. Imported HTML formatting in labels is reduced to text.
 
@@ -47,4 +51,4 @@ Documents remain limited to 500,000 serialized characters. Plotly input is addit
 
 Click **Export HTML** in a player or editor, or run **Export visualization as HTML** from the command palette. The file is saved beside the source note. Existing files are preserved by adding a numeric suffix. A notice shows the saved path.
 
-The file contains the document, styles and entire browser runtime, including Plotly. It works without a CDN, Obsidian or Python. It is about 5 MB even for a small scene because the runtime includes full Plotly. The plugin bundle is below 5 MB by sharing one Plotly payload between playback and export. Language and theme are captured at export time. Sharing this file shares the visualization's content.
+The file contains the document, styles and entire browser runtime, including Plotly. It works without a CDN, Obsidian or Python. It is about 3.3 MB even for a small scene because the runtime includes all supported Plotly types. Large document data adds to that size. The plugin shares one Plotly payload between playback and export. Language and theme are captured at export time. Sharing this file shares the visualization's content.

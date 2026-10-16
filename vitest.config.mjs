@@ -8,6 +8,7 @@ export default defineConfig({
     ),
   },
   test: {
+    include: ["tests/**/*.test.ts"],
     alias: {
       "#dom": fileURLToPath(new URL("./src/dom-browser.ts", import.meta.url)),
       obsidian: fileURLToPath(

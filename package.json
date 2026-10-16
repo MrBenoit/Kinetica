@@ -1,13 +1,13 @@
 {
   "name": "kinetica",
-  "version": "0.3.2",
+  "version": "0.4.0",
   "description": "Create step-by-step scenes and interactive function plots in your notes.",
   "type": "module",
   "license": "MIT",
   "scripts": {
     "build": "tsc --noEmit && node scripts/build.mjs",
     "dev": "node scripts/build.mjs --watch",
-    "test": "vitest run",
+    "test": "vitest run && node --test scripts/*.test.mjs",
     "lint": "eslint src tests",
     "format": "prettier --write src tests styles.css *.json *.mjs scripts/*.mjs README.md",
     "format:check": "prettier --check src tests styles.css *.json *.mjs scripts/*.mjs README.md",
@@ -16,12 +16,17 @@
   "devDependencies": {
     "@eslint/js": "^9.39.4",
     "@types/node": "^22.15.17",
+    "assert": "2.1.0",
+    "buffer": "6.0.3",
     "esbuild": "0.25.5",
+    "esbuild-plugin-glsl": "1.4.2",
+    "esbuild-plugin-inline-css": "0.0.1",
     "eslint": "^9.39.4",
     "eslint-plugin-obsidianmd": "0.4.2",
     "jsdom": "^27.0.0",
     "obsidian": "^1.8.7",
     "prettier": "^3.6.2",
+    "stream-browserify": "3.0.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.46.1",
     "vitest": "4.1.11"
@@ -36,7 +41,7 @@
   },
   "homepage": "https://github.com/MrBenoit/Kinetica#readme",
   "dependencies": {
-    "plotly.js-dist-min": "4.1.2",
+    "plotly.js": "4.1.2",
     "plotly.js-locales": "4.1.2"
   },
   "imports": {

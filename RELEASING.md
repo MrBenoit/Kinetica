@@ -4,6 +4,7 @@
 
 1. Update the version in `manifest.json`, `package.json` and `package-lock.json`. Add its minimum Obsidian version to `versions.json`.
 2. Run `npm ci --ignore-scripts` and `npm run check` from a clean checkout.
+   Inspect `dist/build-report.json` for the size and supported trace types. The build checks the 3.5 MB development budget and compares the Plotly schema against the full distribution. See [Build size](docs/build-size.md).
 3. Test creation, editing, playback and sliders in Obsidian. Check existing notes still open. Record any untested platforms in the release notes.
 4. Commit the source and push `main`. Wait for the Check workflow to pass.
 

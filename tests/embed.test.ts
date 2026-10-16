@@ -21,7 +21,7 @@ afterEach(() => {
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
 });
-function mount(kind: "wave" | "flow" = "wave") {
+function mount(kind: "wave" | "flow" | "motion" = "wave") {
   const host = document.createElement("kinetica-player");
   host.setAttribute("lang", "en");
   const data = document.createElement("script");
@@ -107,4 +107,18 @@ describe("HTML player", () => {
     expect(root.querySelector("h3")!.textContent).toBe(m.title);
     expect(root.querySelector("img")).toBeNull();
   });
+});
+
+it("plays version 3 shared controls after JSON export into HTML", () => {
+  const { root, host } = mount("motion");
+  const before = root.querySelector(".mn-curve")!.getAttribute("d");
+  const slider = root.querySelector<HTMLInputElement>("input[type=range]")!;
+  slider.value = "4";
+  slider.dispatchEvent(new Event("input"));
+  expect(
+    root.querySelector("[data-node=body]")!.getAttribute("transform"),
+  ).toBe("translate(146 180)");
+  expect(root.querySelector(".mn-node-value")!.textContent).toBe("s = 8 m");
+  expect(root.querySelector(".mn-curve")!.getAttribute("d")).not.toBe(before);
+  host.remove();
 });

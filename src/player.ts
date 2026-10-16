@@ -1,4 +1,5 @@
 import type { Motion, Scene, Step, Comparison } from "./model";
+import { compileStep, ease, stepTiming } from "./scene-runtime";
 import { drawScene, interpolateStep } from "./draw";
 import { PlotView } from "./plot";
 import { LabView } from "./lab";
@@ -45,10 +46,21 @@ export class Player {
     const win = this.root.ownerDocument.defaultView!,
       doc = this.root.ownerDocument;
     let index = 0,
-      interval = 0,
+      timer = 0,
       frame = 0,
       speed = 1,
       current = scene.steps[0]!;
+    const parameters = scene.parameters ?? [];
+    const values = Object.fromEntries(parameters.map((p) => [p.name, p.value]));
+    const resolvers = scene.steps.map((step) =>
+      scene.version === 3
+        ? compileStep(
+            step,
+            parameters.map((p) => p.name),
+          )
+        : () => step,
+    );
+    let linkedPlot: PlotView | undefined;
     const canvas = svg(this.root, "svg", {
       viewBox: "0 0 800 440",
       class: "mn-scene",
@@ -65,8 +77,8 @@ export class Player {
       !scene.steps.some((s, i) => i < target && s.question && !answered.has(i));
     const bar = el(this.root, "div", "mn-toolbar");
     const stop = () => {
-      win.clearInterval(interval);
-      interval = 0;
+      win.clearTimeout(timer);
+      timer = 0;
       play.textContent = t("Play", "Запуск");
     };
     const go = (next: number, animate = true) => {
@@ -74,7 +86,7 @@ export class Player {
       win.cancelAnimationFrame(frame);
       const previous = current;
       index = next;
-      current = scene.steps[index]!;
+      current = resolvers[index]!(values);
       title.textContent = `${index + 1} / ${scene.steps.length} · ${current.title}`;
       description.textContent = current.description;
       renderCode(code, current, index ? previous : undefined, t);
@@ -125,10 +137,15 @@ export class Player {
         render(current);
         return;
       }
+      const timing = stepTiming(scene, scene.steps[index]!);
+      if (!timing.transition) {
+        render(current);
+        return;
+      }
       const start = win.performance.now();
       const tick = (now: number) => {
-        const p = Math.min(1, (now - start) / 350);
-        render(interpolateStep(previous, current, 1 - (1 - p) ** 3));
+        const p = Math.min(1, (now - start) / (timing.transition / speed));
+        render(interpolateStep(previous, current, ease(timing.easing, p)));
         if (p < 1) frame = win.requestAnimationFrame(tick);
       };
       frame = win.requestAnimationFrame(tick);
@@ -137,15 +154,23 @@ export class Player {
       if (!canGo(index + 1)) return;
       if (index === scene.steps.length - 1) go(0);
       play.textContent = t("Pause", "Пауза");
-      interval = win.setInterval(() => {
-        if (index < scene.steps.length - 1) go(index + 1);
-        if (index === scene.steps.length - 1 || !canGo(index + 1)) stop();
-      }, scene.duration / speed);
+      const schedule = () => {
+        const timing = stepTiming(scene, scene.steps[index]!);
+        timer = win.setTimeout(
+          () => {
+            if (index < scene.steps.length - 1) go(index + 1);
+            if (index === scene.steps.length - 1 || !canGo(index + 1)) stop();
+            else schedule();
+          },
+          (timing.transition + timing.hold) / speed,
+        );
+      };
+      schedule();
     };
     const play = button(
       bar,
       t("Play", "Запуск"),
-      () => (interval ? stop() : start()),
+      () => (timer ? stop() : start()),
       "mod-cta",
     );
     play.disabled = scene.steps.length < 2;
@@ -168,7 +193,7 @@ export class Player {
       [0.5, 1, 1.5, 2].map((v) => ({ value: String(v), label: `${v}×` })),
       "1",
       (v) => {
-        const playing = interval !== 0;
+        const playing = timer !== 0;
         stop();
         speed = Number(v);
         if (playing) start();
@@ -186,6 +211,69 @@ export class Player {
         "mn-step-button",
       ),
     );
+    const controls = el(this.root, "div", "mn-parameters");
+    const inputs: { range: HTMLInputElement; number: HTMLInputElement }[] = [];
+    const update = () => {
+      win.cancelAnimationFrame(frame);
+      current = resolvers[index]!(values);
+      drawScene(canvas, current);
+      title.textContent = `${index + 1} / ${scene.steps.length} · ${current.title}`;
+      description.textContent = current.description;
+      linkedPlot?.setValues(values);
+    };
+    for (const p of parameters) {
+      const row = el(controls, "label", "mn-parameter");
+      el(row, "span", "", p.label || p.name);
+      const range = el(row, "input"),
+        number = el(row, "input");
+      range.type = "range";
+      number.type = "number";
+      for (const input of [range, number]) {
+        input.min = String(p.min);
+        input.max = String(p.max);
+        input.step = String(p.step);
+        input.value = String(p.value);
+      }
+      range.setAttribute("aria-label", p.label || p.name);
+      number.setAttribute(
+        "aria-label",
+        `${p.label || p.name} (${t("value", "значение")})`,
+      );
+      const change = (value: number) => {
+        if (Number.isFinite(value))
+          values[p.name] = Math.max(p.min, Math.min(p.max, value));
+        range.value = number.value = String(values[p.name]);
+        update();
+      };
+      range.addEventListener("input", () => change(Number(range.value)));
+      number.addEventListener("change", () => change(number.valueAsNumber));
+      inputs.push({ range, number });
+    }
+    if (parameters.length)
+      button(controls, t("Reset parameters", "Сбросить параметры"), () => {
+        parameters.forEach((p, i) => {
+          values[p.name] = p.value;
+          inputs[i]!.range.value = inputs[i]!.number.value = String(p.value);
+        });
+        update();
+      });
+    if (scene.plot) {
+      linkedPlot = new PlotView(
+        el(this.root, "div", "mn-linked-plot"),
+        {
+          ...scene.plot,
+          version: 1,
+          type: "plot",
+          id: scene.id,
+          title: scene.title,
+          description: "",
+          parameters,
+        },
+        t,
+        { externalControls: true },
+      );
+      this.dispose.push(() => linkedPlot?.destroy());
+    }
     bar.hidden = !!this.options.controlled;
     timeline.hidden = !!this.options.controlled;
     this.seekHandler = (i) => {

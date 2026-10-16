@@ -18,7 +18,7 @@ The interface supports English and Russian and follows your Obsidian theme.
 ## Create your first visualization
 
 1. Open the command palette and run **Kinetica: Create visualization**, or click the workflow icon on the ribbon.
-2. Pick a scene or graph template.
+2. Search the gallery or filter by category. Preview an example, then click **Use this example**.
 3. Edit the title and content. In a scene, drag blocks, add arrows and duplicate a step to create the next state. In a graph, enter formulas and define parameters for sliders.
 4. Click **Save to note**. A new Markdown note appears in the current note's folder.
 5. View it in Reading view or Live Preview. Click **Edit** to reopen the visual editor.
@@ -32,6 +32,8 @@ The interface follows Obsidian's language, with English and Russian supported. Y
 - Blocks with a label, value, color and highlight
 - Drag positioning, arrow-key movement and numeric coordinates
 - Directed arrows with labels
+- Per-step transitions, holds and easing with duration labels on the timeline
+- Shared sliders for block positions, text values and a linked function graph
 - Steps with an explanation and code excerpt
 - Duplicate, reorder or delete steps
 - Play, pause, back, next, restart, speed and direct step selection
@@ -39,6 +41,8 @@ The interface follows Obsidian's language, with English and Russian supported. Y
 - Undo and redo in the editor, plus a discard confirmation
 
 Each step stores its own state. Editing a block changes the current step only. Duplicate the current step, then move objects or change values to describe what happens next. New objects appear immediately; existing objects animate between positions. Active line numbers and named variables can be stored per step. The player highlights active lines and changed values. Optional prediction questions pause playback until answered or revealed. Code is displayed without execution.
+
+Read [Scene tools](docs/scene-tools.md) for the gallery, timing and shared-parameter editor. These additions use document version 3 and need the matching development build of the plugin or HTML viewer. Existing version 1 and 2 notes remain readable.
 
 The canvas uses an 800 by 440 coordinate space. A block is 140 by 74 units. The initial version supports rectangular blocks and straight arrows. It is not a general drawing application.
 
@@ -70,7 +74,7 @@ Plots sample 401 points across the X range. Undefined results are omitted and la
 - Import Plotly figure JSON created with Python, including offline scientific and 3D plots
 - Export any visualization as one standalone HTML file
 
-Read [Learning tools](docs/learning.md) for creation steps, Python examples and limits. The full Plotly runtime is included locally. Python scripts are not executed. Geographic maps and remote resources are not supported. Full Plotly makes the viewer about 5 MB. The plugin shares one Plotly payload with its HTML exporter and stays below 5 MB.
+Read [Learning tools](docs/learning.md) for creation steps, Python examples and limits. The offline Plotly runtime is included locally with all supported scientific and 3D trace types. Python scripts are not executed. Geographic maps and remote resources are not supported. The viewer and plugin are about 3.3 MB each. The plugin shares one Plotly payload with its HTML exporter.
 
 ## Portable documents
 
@@ -78,7 +82,7 @@ A visualization is versioned JSON inside a `motion` fenced code block in the not
 
 The editor can import JSON from another user or an assistant. Imported documents receive a fresh ID. If you manually duplicate a block inside the same note, give its `id` a new value before editing either copy. Use top-level fenced blocks for visual editing; editing blocks nested in blockquotes is not supported in this version. The editor refuses to save when it detects a duplicate ID or a conflicting edit to that visualization. Unrelated edits to the surrounding note are preserved.
 
-Examples are in [examples/](examples/). Documents must contain `version: 1` or `version: 2`, a unique `id`, `type`, `title` and `description` plus fields for that type. Limits are 100 steps, 64 blocks and 128 arrows per step, and 500,000 characters in the serialized block. Label and expression limits are checked before rendering.
+Examples are in [examples/](examples/). Documents must contain `version: 1`, `version: 2` or `version: 3`, a unique `id`, `type`, `title` and `description` plus fields for that type. Limits are 100 steps, 64 blocks and 128 arrows per step, and 500,000 characters in the serialized block. Label and expression limits are checked before rendering.
 
 No JavaScript or HTML from a document is executed. Formulas are parsed by a restricted mathematical interpreter; they cannot access files, the network or JavaScript objects. Unknown functions and parameters produce validation errors.
 
@@ -96,7 +100,7 @@ This plugin runs offline. It uses no accounts, remote services, telemetry or ext
 
 ## Use it on an HTML page
 
-The standalone viewer works without Obsidian. Download `kinetica.js` and `kinetica-example.html` from the [HTML release](https://github.com/MrBenoit/Kinetica/releases/tag/html-0.3.2), keep them together and open the HTML file. To embed your own document, use a `<kinetica-player>` element with the JSON from a motion block.
+The standalone viewer works without Obsidian. Download `kinetica.js` and `kinetica-example.html` from the [HTML release](https://github.com/MrBenoit/Kinetica/releases/tag/html-0.4.0), keep them together and open the HTML file. To embed your own document, use a `<kinetica-player>` element with the JSON from a motion block.
 
 See [HTML embedding](docs/html-embedding.md) for the full copyable example, theme options, script escaping and limitations. The same scene and graph format works in notes and web pages.
 
@@ -109,6 +113,8 @@ npm ci --ignore-scripts
 npm run check
 ```
 
+See [Build size](docs/build-size.md) for the Plotly module policy, compatibility checks and size budget.
+
 `npm run dev` rebuilds JavaScript on changes. Run `npm run build` after changing styles or manifest too. The installable files are written to `dist/`. Reload the plugin in a test vault after copying them there.
 
 `src/model.ts` owns document validation and conflict-aware replacement. `src/expression.ts` parses math. `src/player.ts`, `src/plot.ts` and `src/draw.ts` render without the Obsidian API. `src/editor.ts` owns editable drafts and history. `src/main.ts` adapts those components to commands, Markdown rendering and vault storage.
@@ -117,7 +123,7 @@ Tests cover expression parsing, invalid input, serialization, concurrent edit pr
 
 ## Distribution
 
-See [RELEASING.md](RELEASING.md) for build, release and community-directory submission steps. The release tag must match the manifest version without a `v` prefix, currently `0.3.2`.
+See [RELEASING.md](RELEASING.md) for build, release and community-directory submission steps. The release tag must match the manifest version without a `v` prefix, currently `0.4.0`.
 
 Follow the current [Obsidian submission guide](https://docs.obsidian.md/Plugins/Releasing/Submit%20your%20plugin) for community-directory submission. No repository, release or submission is created by the build scripts.
 

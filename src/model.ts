@@ -1,3 +1,5 @@
+import { compileStep } from "./scene-runtime";
+import plotlyPolicy from "./plotly-policy.json";
 import { compileExpression, reservedNames } from "./expression";
 export const palette = [
   "blue",
@@ -8,7 +10,13 @@ export const palette = [
   "cyan",
 ] as const;
 export type Color = (typeof palette)[number];
+export interface Timing {
+  transition: number;
+  hold: number;
+  easing: "linear" | "ease-in" | "ease-out" | "ease-in-out";
+}
 export interface SceneNode {
+  bindings?: { x?: string; y?: string };
   id: string;
   label: string;
   value: string;
@@ -28,6 +36,7 @@ export interface Question {
   correct: number;
 }
 export interface Step {
+  timing?: Timing;
   activeLines?: number[];
   variables?: { name: string; value: string }[];
   question?: Question;
@@ -38,13 +47,18 @@ export interface Step {
   edges: Edge[];
 }
 interface Base {
-  version: 1 | 2;
+  version: 1 | 2 | 3;
   id: string;
   title: string;
   description: string;
 }
 export interface Scene extends Base {
   type: "scene";
+  parameters?: Parameter[];
+  plot?: Pick<
+    Plot,
+    "curves" | "xMin" | "xMax" | "yMin" | "yMax" | "xLabel" | "yLabel"
+  >;
   duration: number;
   steps: Step[];
 }
@@ -144,7 +158,7 @@ function unique(values: string[], path: string) {
 }
 export function validateMotion(input: unknown): Motion {
   const m = object(input, "document");
-  if (m.version !== 1 && m.version !== 2)
+  if (m.version !== 1 && m.version !== 2 && m.version !== 3)
     throw new Error("Unsupported document version");
   const base: Base = {
     version: m.version,
@@ -192,6 +206,14 @@ export function validateMotion(input: unknown): Motion {
       figure: validateFigure(m.figure),
     };
   if (m.type === "scene") {
+    if (
+      base.version !== 3 &&
+      (m.parameters !== undefined || m.plot !== undefined)
+    )
+      throw new Error("Scene controls require document version 3");
+    const parameters = validateParameters(
+      m.parameters === undefined ? [] : m.parameters,
+    );
     const steps = list(m.steps, "steps", 1, 100).map((raw, i): Step => {
       const s = object(raw, `step ${i + 1}`);
       const nodes = list(s.nodes, "nodes", 0, 64).map((raw): SceneNode => {
@@ -199,6 +221,7 @@ export function validateMotion(input: unknown): Motion {
         if (typeof n.highlighted !== "boolean")
           throw new Error("highlighted must be a boolean");
         return {
+          ...nodeBindings(n, base.version),
           id: ident(n.id, "node.id"),
           label: str(n.label, "node.label", 120),
           value: str(n.value, "node.value", 200),
@@ -232,41 +255,41 @@ export function validateMotion(input: unknown): Motion {
         description: str(s.description, "step.description"),
         code: str(s.code, "step.code", 4000),
         ...stepExtras(s, base.version),
+        ...timingExtras(s, base.version),
         nodes,
         edges,
       };
     });
+    if (base.version === 3)
+      for (const step of steps)
+        compileStep(
+          step,
+          parameters.map((p) => p.name),
+        );
+    let plot: Scene["plot"];
+    if (m.plot !== undefined) {
+      const checked = validateMotion({
+        ...object(m.plot, "scene.plot"),
+        ...base,
+        version: 1,
+        type: "plot",
+        parameters,
+      });
+      if (checked.type !== "plot") throw new Error("Expected a graph");
+      const { curves, xMin, xMax, yMin, yMax, xLabel, yLabel } = checked;
+      plot = { curves, xMin, xMax, yMin, yMax, xLabel, yLabel };
+    }
     return {
       ...base,
+      ...(m.parameters !== undefined ? { parameters } : {}),
+      ...(plot ? { plot } : {}),
       type: "scene",
       duration: num(m.duration, "duration", 300, 30000),
       steps,
     };
   }
   if (m.type !== "plot") throw new Error("Unknown document type");
-  const parameters = list(m.parameters, "parameters", 0, 12).map(
-    (raw): Parameter => {
-      const p = object(raw, "parameter");
-      const name = ident(p.name, "parameter.name");
-      if (!/^[A-Za-z][A-Za-z0-9_]*$/.test(name) || reservedNames.has(name))
-        throw new Error(`Invalid parameter name: ${name}`);
-      const min = num(p.min, "parameter.min"),
-        max = num(p.max, "parameter.max");
-      if (max <= min) throw new Error("Parameter maximum must exceed minimum");
-      return {
-        name,
-        label: str(p.label, "parameter.label", 120),
-        min,
-        max,
-        step: num(p.step, "parameter.step", 1e-6, max - min),
-        value: num(p.value, "parameter.value", min, max),
-      };
-    },
-  );
-  unique(
-    parameters.map((p) => p.name),
-    "parameters",
-  );
+  const parameters = validateParameters(m.parameters);
   const curves = list(m.curves, "curves", 1, 8).map((raw): Curve => {
     const c = object(raw, "curve");
     const formula = str(c.formula, "curve.formula", 256);
@@ -445,16 +468,7 @@ export function validateFigure(input: unknown): Record<string, unknown> {
       if (
         key === "type" &&
         typeof item === "string" &&
-        [
-          "scattergeo",
-          "choropleth",
-          "scattermap",
-          "scattermapbox",
-          "choroplethmap",
-          "choroplethmapbox",
-          "densitymap",
-          "densitymapbox",
-        ].includes(item)
+        plotlyPolicy.excludedTraces.includes(item)
       )
         throw new Error(
           "Map traces require external resources and are not supported offline",
@@ -478,17 +492,7 @@ export function validateFigure(input: unknown): Record<string, unknown> {
     }
     if (template.data && typeof template.data === "object") {
       const defaults = { ...object(template.data, "template.data") };
-      for (const key of [
-        "scattergeo",
-        "choropleth",
-        "scattermap",
-        "scattermapbox",
-        "choroplethmap",
-        "choroplethmapbox",
-        "densitymap",
-        "densitymapbox",
-      ])
-        delete defaults[key];
+      for (const key of plotlyPolicy.excludedTraces) delete defaults[key];
       template.data = defaults;
     }
     layout.template = template;
@@ -498,4 +502,67 @@ export function validateFigure(input: unknown): Record<string, unknown> {
     layout,
     frames: figure.frames ?? [],
   }) as Record<string, unknown>;
+}
+
+function validateParameters(input: unknown): Parameter[] {
+  const parameters = list(input, "parameters", 0, 12).map((raw): Parameter => {
+    const p = object(raw, "parameter");
+    const name = ident(p.name, "parameter.name");
+    if (!/^[A-Za-z][A-Za-z0-9_]*$/.test(name) || reservedNames.has(name))
+      throw new Error(`Invalid parameter name: ${name}`);
+    const min = num(p.min, "parameter.min"),
+      max = num(p.max, "parameter.max");
+    if (max <= min) throw new Error("Parameter maximum must exceed minimum");
+    return {
+      name,
+      label: str(p.label, "parameter.label", 120),
+      min,
+      max,
+      step: num(p.step, "parameter.step", 1e-6, max - min),
+      value: num(p.value, "parameter.value", min, max),
+    };
+  });
+  unique(
+    parameters.map((p) => p.name),
+    "parameters",
+  );
+  return parameters;
+}
+
+function nodeBindings(
+  n: Record<string, unknown>,
+  version: number,
+): Partial<SceneNode> {
+  if (n.bindings === undefined) return {};
+  if (version !== 3)
+    throw new Error("Scene controls require document version 3");
+  const raw = object(n.bindings, "bindings"),
+    bindings: NonNullable<SceneNode["bindings"]> = {};
+  for (const key of ["x", "y"] as const)
+    if (raw[key] !== undefined)
+      bindings[key] = str(raw[key], `bindings.${key}`, 256);
+  return { bindings };
+}
+function timingExtras(
+  s: Record<string, unknown>,
+  version: number,
+): Partial<Step> {
+  if (s.timing === undefined) return {};
+  if (version !== 3)
+    throw new Error("Scene controls require document version 3");
+  const raw = object(s.timing, "timing");
+  if (
+    !["linear", "ease-in", "ease-out", "ease-in-out"].includes(
+      String(raw.easing),
+    )
+  )
+    throw new Error("Unknown easing");
+  const timing: Timing = {
+    transition: num(raw.transition, "transition", 0, 10000),
+    hold: num(raw.hold, "hold", 0, 30000),
+    easing: raw.easing as Timing["easing"],
+  };
+  if (timing.transition + timing.hold < 100)
+    throw new Error("Step timing must be at least 100 ms");
+  return { timing };
 }

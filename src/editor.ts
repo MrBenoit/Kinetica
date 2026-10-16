@@ -8,6 +8,8 @@ import type {
   Comparison,
   PlotlyDocument,
   Step,
+  Parameter,
+  Timing,
 } from "./model";
 import {
   clone,
@@ -28,6 +30,7 @@ import {
   svg,
   errorMessage,
 } from "./ui";
+import { stepTiming } from "./scene-runtime";
 import { drawScene } from "./draw";
 import { Player } from "./player";
 export class Editor {
@@ -205,7 +208,12 @@ export class Editor {
         "Выбери пример, настрой его и сохрани в заметку. Всё работает без интернета.",
       ),
     );
-    const grid = el(this.root, "div", "mn-template-grid");
+    const filters = el(this.root, "div", "mn-gallery-filters");
+    const gallery = el(this.root, "div", "mn-gallery");
+    const grid = el(gallery, "div", "mn-template-grid");
+    const previewPanel = el(gallery, "section", "mn-gallery-preview");
+    let category = "all",
+      query = "";
     const choices: [Template, string, string][] = [
       [
         "flow",
@@ -295,19 +303,124 @@ export class Editor {
         ),
       ],
     );
-    for (const [kind, title, description] of choices) {
-      const card = button(
-        grid,
-        "",
+    choices.push(
+      [
+        "stack",
+        t("Stack: push and pop", "Стек: push и pop"),
+        t(
+          "LIFO with a prediction question",
+          "LIFO с вопросом перед извлечением",
+        ),
+      ],
+      [
+        "bubble-sort",
+        t("Bubble sort", "Пузырьковая сортировка"),
+        t(
+          "Adjacent swaps with timed transitions",
+          "Обмен соседних элементов с настройкой переходов",
+        ),
+      ],
+      [
+        "motion",
+        t("Motion and distance", "Движение и расстояние"),
+        t(
+          "Shared sliders, moving body and distance curve",
+          "Общие ползунки, движение тела и график пути",
+        ),
+      ],
+    );
+    const categories: Record<Template, string> = {
+      flow: "code",
+      array: "code",
+      wave: "math",
+      growth: "math",
+      "blank-scene": "blank",
+      "blank-plot": "blank",
+      "code-trace": "code",
+      prediction: "code",
+      queue: "systems",
+      "queue-compare": "systems",
+      comparison: "code",
+      stack: "code",
+      "bubble-sort": "code",
+      motion: "science",
+    };
+    const cards: { card: HTMLButtonElement; kind: Template; text: string }[] =
+      [];
+    const show = (kind: Template) => {
+      this.preview?.destroy();
+      previewPanel.replaceChildren();
+      const example = template(kind, t);
+      const actions = el(previewPanel, "div", "mn-toolbar");
+      button(
+        actions,
+        t("Use this example", "Создать из примера"),
         () => {
           this.draft = template(kind, t);
           this.render();
         },
-        "mn-template",
+        "mod-cta",
       );
+      this.preview = new Player(el(previewPanel, "div"), example, t);
+      cards.forEach(({ card, kind: cardKind }) =>
+        card.setAttribute("aria-pressed", String(kind === cardKind)),
+      );
+    };
+    for (const [kind, title, description] of choices) {
+      const card = button(grid, "", () => show(kind), "mn-template");
       el(card, "strong", "", title);
       el(card, "span", "", description);
+      cards.push({ card, kind, text: `${title} ${description}`.toLowerCase() });
     }
+    const empty = el(
+      grid,
+      "p",
+      "mn-hint",
+      t("No examples match your search.", "По запросу ничего не найдено."),
+    );
+    const filter = () => {
+      cards.forEach(({ card, kind, text }) => {
+        card.hidden =
+          (category !== "all" && categories[kind] !== category) ||
+          !text.includes(query);
+      });
+      empty.hidden = cards.some(({ card }) => !card.hidden);
+    };
+    const search = field(
+      filters,
+      t("Search examples", "Поиск примеров"),
+      "",
+      (v) => {
+        query = v.trim().toLowerCase();
+        filter();
+      },
+    );
+    search.addEventListener("input", () => {
+      query = search.value.trim().toLowerCase();
+      filter();
+    });
+    select(
+      filters,
+      t("Category", "Категория"),
+      [
+        { value: "all", label: t("All examples", "Все примеры") },
+        { value: "code", label: t("Code and algorithms", "Код и алгоритмы") },
+        { value: "math", label: t("Mathematics", "Математика") },
+        {
+          value: "systems",
+          label: t("Systems and queues", "Системы и очереди"),
+        },
+        { value: "science", label: t("Physics", "Физика") },
+        { value: "blank", label: t("Start from scratch", "С чистого листа") },
+      ],
+      category,
+      (v) => {
+        category = v;
+        filter();
+      },
+    );
+    filter();
+    show("flow");
     const plotly = el(this.root, "details");
     el(
       plotly,
@@ -436,6 +549,71 @@ export class Editor {
         "Перетаскивай блоки по холсту. Выбери блок для настройки. Стрелки на клавиатуре двигают блок, Shift ускоряет.",
       ),
     );
+    const shared = el(main, "details", "mn-scene-controls");
+    el(
+      shared,
+      "summary",
+      "",
+      t("Shared parameters and graph", "Общие параметры и график"),
+    );
+    if (!m.parameters) {
+      button(
+        shared,
+        t("Enable shared parameters", "Добавить общие параметры"),
+        () =>
+          this.change(() => {
+            m.version = 3;
+            m.parameters = [];
+          }, true),
+      );
+    } else {
+      el(
+        shared,
+        "p",
+        "mn-hint",
+        t(
+          "Use parameter names in position formulas and {{formula}} in labels, values and explanations. Preview sliders do not change saved initial values.",
+          "Используй имена параметров в формулах координат, а {{формула}} в подписях, значениях и пояснениях. Ползунки предпросмотра не меняют начальные значения.",
+        ),
+      );
+      this.parameterFields(shared, m.parameters);
+      if (!m.plot)
+        button(shared, t("Add linked graph", "Добавить связанный график"), () =>
+          this.change(() => {
+            m.version = 3;
+            m.plot = {
+              xMin: 0,
+              xMax: 10,
+              yMin: 0,
+              yMax: 10,
+              xLabel: "x",
+              yLabel: "y",
+              curves: [
+                {
+                  label: "y",
+                  formula: m.parameters![0]?.name
+                    ? `${m.parameters![0].name} * x`
+                    : "x",
+                  color: "blue",
+                },
+              ],
+            };
+          }, true),
+        );
+      else {
+        const plotSettings = el(shared, "details");
+        el(plotSettings, "summary", "", t("Linked graph", "Связанный график"));
+        this.plotFields(plotSettings, m.plot, false);
+        button(
+          plotSettings,
+          t("Remove linked graph", "Удалить связанный график"),
+          () =>
+            this.change(() => {
+              delete m.plot;
+            }, true),
+        );
+      }
+    }
     const canvas = svg(main, "svg", {
       viewBox: "0 0 800 440",
       class: "mn-scene mn-canvas",
@@ -554,6 +732,13 @@ export class Editor {
         },
         "mn-step-button",
       );
+      const timing = stepTiming(m, s);
+      el(
+        b,
+        "small",
+        "mn-step-duration",
+        `${(timing.transition + timing.hold) / 1000} ${t("s", "с")}`,
+      );
       b.classList.toggle("is-active", i === this.step);
       b.setAttribute("aria-current", String(i === this.step));
     });
@@ -618,14 +803,61 @@ export class Editor {
     this.stepExtras(main, m, step);
     numberField(
       main,
-      t("Time per step (ms)", "Длительность шага (мс)"),
+      t("Default step duration (ms)", "Длительность по умолчанию (мс)"),
       m.duration,
       (v) =>
         this.change(() => {
           m.duration = v;
-        }),
+        }, true),
       300,
       30000,
+    );
+    const timing = el(main, "fieldset", "mn-group");
+    el(timing, "legend", "", t("Current step timing", "Время текущего шага"));
+    const currentTiming = stepTiming(m, step);
+    const setTiming = (key: keyof Timing, value: number | Timing["easing"]) =>
+      this.change(() => {
+        m.version = 3;
+        step.timing = { ...stepTiming(m, step), [key]: value };
+        const label = timeline.querySelectorAll(".mn-step-duration")[this.step];
+        if (label)
+          label.textContent = `${(step.timing.transition + step.timing.hold) / 1000} ${t("s", "с")}`;
+      });
+    numberField(
+      timing,
+      t("Transition (ms)", "Переход (мс)"),
+      currentTiming.transition,
+      (v) => setTiming("transition", v),
+      0,
+      10000,
+    );
+    numberField(
+      timing,
+      t("Hold (ms)", "Пауза на шаге (мс)"),
+      currentTiming.hold,
+      (v) => setTiming("hold", v),
+      0,
+      30000,
+    );
+    select(
+      timing,
+      t("Easing", "Плавность"),
+      [
+        { value: "linear", label: t("Linear", "Равномерно") },
+        { value: "ease-in", label: t("Ease in", "Ускорение") },
+        { value: "ease-out", label: t("Ease out", "Замедление") },
+        {
+          value: "ease-in-out",
+          label: t("Ease in and out", "Ускорение и замедление"),
+        },
+      ],
+      currentTiming.easing,
+      (v) => setTiming("easing", v as Timing["easing"]),
+    );
+    button(timing, t("Use default timing", "Вернуть время по умолчанию"), () =>
+      this.change(() => {
+        delete step.timing;
+      }, true),
     );
     el(inspector, "h3", "", t("Selected block", "Выбранный блок"));
     select(
@@ -655,6 +887,33 @@ export class Editor {
         });
         draw();
       });
+      if (m.parameters) {
+        for (const axis of ["x", "y"] as const)
+          field(
+            inspector,
+            axis === "x"
+              ? t("X formula", "Формула X")
+              : t("Y formula", "Формула Y"),
+            node.bindings?.[axis] ?? "",
+            (v) =>
+              this.change(() => {
+                m.version = 3;
+                const bindings = { ...node.bindings };
+                if (v.trim()) bindings[axis] = v;
+                else delete bindings[axis];
+                node.bindings = bindings;
+              }),
+          );
+        el(
+          inspector,
+          "p",
+          "mn-hint",
+          t(
+            "Leave formulas empty to use X/Y coordinates. Use {{speed}} in a label or value to display a parameter.",
+            "Оставь формулы пустыми для обычных координат X/Y. Впиши {{speed}} в подпись или значение, чтобы показать параметр.",
+          ),
+        );
+      }
       select(
         inspector,
         t("Color", "Цвет"),
@@ -783,7 +1042,7 @@ export class Editor {
       step.activeLines?.join(", ") ?? "",
       (v) =>
         this.change(() => {
-          m.version = 2;
+          m.version = m.version === 3 ? 3 : 2;
           step.activeLines = v.trim()
             ? v
                 .split(",")
@@ -811,7 +1070,7 @@ export class Editor {
     }
     button(details, t("Add variable", "Добавить переменную"), () =>
       this.change(() => {
-        m.version = 2;
+        m.version = m.version === 3 ? 3 : 2;
         step.variables ??= [];
         let n = 1;
         while (step.variables.some((v) => v.name === `value${n}`)) n++;
@@ -822,7 +1081,7 @@ export class Editor {
     if (!q)
       button(details, t("Add question", "Добавить вопрос"), () =>
         this.change(() => {
-          m.version = 2;
+          m.version = m.version === 3 ? 3 : 2;
           step.question = {
             prompt: t("What happens next?", "Что произойдёт дальше?"),
             options: [
@@ -1006,11 +1265,81 @@ export class Editor {
     );
   }
   private plot(m: Plot) {
-    const t = this.t;
     const layout = el(this.root, "div", "mn-editor-grid mn-plot-editor");
     const formulas = el(layout, "div");
     const live = el(layout, "div", "mn-plot-preview");
     this.previewRoot = el(live, "div", "mn-preview");
+    this.plotFields(formulas, m);
+  }
+  private parameterFields(root: HTMLElement, parameters: Parameter[]) {
+    const t = this.t;
+    el(root, "h3", "", t("Sliders", "Ползунки"));
+    parameters.forEach((p, i) => {
+      const group = el(root, "fieldset", "mn-group");
+      el(group, "legend", "", p.name);
+      const names = el(group, "div", "mn-pair");
+      field(names, t("Name in formula", "Имя в формуле"), p.name, (v) =>
+        this.change(() => {
+          p.name = v;
+        }),
+      );
+      field(names, t("Label", "Подпись"), p.label, (v) =>
+        this.change(() => {
+          p.label = v;
+        }),
+      );
+      const ranges = el(group, "div", "mn-pair");
+      numberField(ranges, t("Minimum", "Минимум"), p.min, (v) =>
+        this.change(() => {
+          p.min = v;
+        }),
+      );
+      numberField(ranges, t("Maximum", "Максимум"), p.max, (v) =>
+        this.change(() => {
+          p.max = v;
+        }),
+      );
+      numberField(ranges, t("Increment", "Шаг"), p.step, (v) =>
+        this.change(() => {
+          p.step = v;
+        }),
+      );
+      numberField(
+        ranges,
+        t("Initial value", "Начальное значение"),
+        p.value,
+        (v) =>
+          this.change(() => {
+            p.value = v;
+          }),
+      );
+      button(group, t("Remove slider", "Удалить ползунок"), () =>
+        this.change(() => {
+          parameters.splice(i, 1);
+        }, true),
+      );
+    });
+    button(root, t("Add slider", "Добавить ползунок"), () =>
+      this.change(() => {
+        let n = 1;
+        while (parameters.some((p) => p.name === `p${n}`)) n++;
+        parameters.push({
+          name: `p${n}`,
+          label: `${t("Parameter", "Параметр")} ${n}`,
+          min: 0,
+          max: 10,
+          step: 0.1,
+          value: 1,
+        });
+      }, true),
+    ).disabled = parameters.length >= 12;
+  }
+  private plotFields(
+    formulas: HTMLElement,
+    m: NonNullable<Scene["plot"]> & { parameters?: Parameter[] },
+    showParameters = true,
+  ) {
+    const t = this.t;
     const settings = el(formulas, "details", "mn-axis-settings");
     el(settings, "summary", "", t("Axes and ranges", "Оси и диапазоны"));
     const help = el(formulas, "details", "mn-formula-help");
@@ -1058,66 +1387,7 @@ export class Editor {
         });
       }, true),
     ).disabled = m.curves.length >= 8;
-    el(formulas, "h3", "", t("Sliders", "Ползунки"));
-    m.parameters.forEach((p, i) => {
-      const group = el(formulas, "fieldset", "mn-group");
-      el(group, "legend", "", p.name);
-      const names = el(group, "div", "mn-pair");
-      field(names, t("Name in formula", "Имя в формуле"), p.name, (v) =>
-        this.change(() => {
-          p.name = v;
-        }),
-      );
-      field(names, t("Label", "Подпись"), p.label, (v) =>
-        this.change(() => {
-          p.label = v;
-        }),
-      );
-      const ranges = el(group, "div", "mn-pair");
-      numberField(ranges, t("Minimum", "Минимум"), p.min, (v) =>
-        this.change(() => {
-          p.min = v;
-        }),
-      );
-      numberField(ranges, t("Maximum", "Максимум"), p.max, (v) =>
-        this.change(() => {
-          p.max = v;
-        }),
-      );
-      numberField(ranges, t("Increment", "Шаг"), p.step, (v) =>
-        this.change(() => {
-          p.step = v;
-        }),
-      );
-      numberField(
-        ranges,
-        t("Initial value", "Начальное значение"),
-        p.value,
-        (v) =>
-          this.change(() => {
-            p.value = v;
-          }),
-      );
-      button(group, t("Remove slider", "Удалить ползунок"), () =>
-        this.change(() => {
-          m.parameters.splice(i, 1);
-        }, true),
-      );
-    });
-    button(formulas, t("Add slider", "Добавить ползунок"), () =>
-      this.change(() => {
-        let n = 1;
-        while (m.parameters.some((p) => p.name === `p${n}`)) n++;
-        m.parameters.push({
-          name: `p${n}`,
-          label: `${t("Parameter", "Параметр")} ${n}`,
-          min: 0,
-          max: 10,
-          step: 0.1,
-          value: 1,
-        });
-      }, true),
-    ).disabled = m.parameters.length >= 12;
+    if (showParameters) this.parameterFields(formulas, m.parameters ?? []);
     el(settings, "h3", "", t("Axes", "Оси"));
     field(
       settings,

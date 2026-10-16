@@ -63,6 +63,7 @@ export class PlotView {
     private root: HTMLElement,
     private plot: Plot,
     private t: Translate,
+    options: { externalControls?: boolean } = {},
   ) {
     this.window = root.ownerDocument.defaultView!;
     this.values = Object.fromEntries(
@@ -98,7 +99,7 @@ export class PlotView {
       ),
     );
     const controls = el(root, "div", "mn-parameters");
-    for (const p of plot.parameters) {
+    for (const p of options.externalControls ? [] : plot.parameters) {
       const row = el(controls, "label", "mn-parameter");
       el(row, "span", "", p.label || p.name);
       const range = el(row, "input");
@@ -133,7 +134,7 @@ export class PlotView {
       this.inputControls.push({ range, number });
     }
     const bar = el(root, "div", "mn-toolbar");
-    if (plot.parameters.length) {
+    if (plot.parameters.length && !options.externalControls) {
       this.animateButton = button(
         bar,
         t("Animate first parameter", "Анимировать первый параметр"),
@@ -185,6 +186,14 @@ export class PlotView {
       });
       this.observer.observe(root);
     }
+  }
+  setValues(values: Readonly<Record<string, number>>) {
+    for (const p of this.plot.parameters) {
+      const value = values[p.name];
+      if (value !== undefined && Number.isFinite(value))
+        this.values[p.name] = Math.max(p.min, Math.min(p.max, value));
+    }
+    this.draw();
   }
   private width() {
     return Math.max(360, Math.min(1000, this.root.clientWidth || 760));

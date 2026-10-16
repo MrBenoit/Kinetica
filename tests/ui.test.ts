@@ -123,6 +123,7 @@ describe("visual editing", () => {
     const save = vi.fn().mockResolvedValue(undefined);
     const editor = new Editor(root, t, save, () => {});
     root.querySelector<HTMLButtonElement>(".mn-template")!.click();
+    click("Use this example");
     click("Add block");
     change("Label", "Cache");
     change("Value", "hit");

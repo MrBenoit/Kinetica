@@ -1,0 +1,12 @@
+{
+  "excludedTraces": [
+    "scattergeo",
+    "choropleth",
+    "scattermap",
+    "scattermapbox",
+    "choroplethmap",
+    "choroplethmapbox",
+    "densitymap",
+    "densitymapbox"
+  ]
+}

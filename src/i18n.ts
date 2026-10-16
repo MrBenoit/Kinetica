@@ -13,6 +13,14 @@ export function localizeError(error: unknown, t: Translate): string {
     );
   const message = error instanceof Error ? error.message : String(error);
   const exact: Record<string, string> = {
+    "Scene controls require document version 3":
+      "Для параметров сцены и настройки времени нужна версия документа 3",
+    "Scene formulas cannot use the graph variable x":
+      "В формулах сцены используй имена параметров. Переменная x доступна только в графике",
+    "Invalid text template": "Проверь парные скобки {{формула}} в тексте",
+    "Unknown easing": "Неизвестный вариант плавности",
+    "Step timing must be at least 100 ms":
+      "Суммарное время шага должно быть не меньше 100 мс",
     "Invalid comparison setting": "Некорректная настройка сравнения",
     "Comparison requires two scenes": "Для сравнения нужны две сцены",
     "Comparison scenes cannot contain questions":

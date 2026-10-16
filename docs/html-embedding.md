@@ -14,16 +14,29 @@ To add a player to an existing page, load the script once and add a custom eleme
       "type": "plot",
       "title": "Explore a parabola",
       "description": "Change a to adjust the curve.",
-      "xLabel": "x", "yLabel": "y",
-      "xMin": -5, "xMax": 5, "yMin": -5, "yMax": 25,
-      "parameters": [{"name":"a","label":"Scale","min":-1,"max":1,"step":0.1,"value":1}],
-      "curves": [{"label":"a * x^2","formula":"a * x^2","color":"blue"}]
+      "xLabel": "x",
+      "yLabel": "y",
+      "xMin": -5,
+      "xMax": 5,
+      "yMin": -5,
+      "yMax": 25,
+      "parameters": [
+        {
+          "name": "a",
+          "label": "Scale",
+          "min": -1,
+          "max": 1,
+          "step": 0.1,
+          "value": 1
+        }
+      ],
+      "curves": [{ "label": "a * x^2", "formula": "a * x^2", "color": "blue" }]
     }
   </script>
 </kinetica-player>
 ```
 
-Copy only the JSON inside an Obsidian `motion` block, without the Markdown fences. All five document types use the same versioned format in both environments. See [Learning tools](learning.md) for version 2 scenes, laboratories, comparisons and Plotly.
+Copy only the JSON inside an Obsidian `motion` block, without the Markdown fences. All five document types use the same versioned format in both environments. See [Learning tools](learning.md) for version 2 scenes, laboratories, comparisons and Plotly. [Scene tools](scene-tools.md) adds version 3 timing and shared parameters. Use the matching viewer build for version 3 documents; older viewers reject them.
 
 When generating HTML from JSON, serialize it with `JSON.stringify(document).replace(/</g, "\\u003c")`. A literal `</script>` inside a JSON string closes the HTML script element before the JSON parser can read it. Escaping `<` prevents that. Never concatenate untrusted text into an HTML page.
 
