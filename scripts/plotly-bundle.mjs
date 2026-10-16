@@ -1,6 +1,6 @@
 import { build } from "esbuild";
 import { glsl } from "esbuild-plugin-glsl";
-import inlineCSS from "esbuild-plugin-inline-css";
+import { inlineCSS } from "./inline-css.mjs";
 import { createRequire } from "node:module";
 import { dirname } from "node:path";
 import assert from "node:assert/strict";

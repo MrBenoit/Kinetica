@@ -20,7 +20,6 @@
     "buffer": "6.0.3",
     "esbuild": "0.25.5",
     "esbuild-plugin-glsl": "1.4.2",
-    "esbuild-plugin-inline-css": "0.0.1",
     "eslint": "^9.39.4",
     "eslint-plugin-obsidianmd": "0.4.2",
     "jsdom": "^27.0.0",

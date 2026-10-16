@@ -6,7 +6,7 @@ Kinetica bundles Plotly locally for offline playback and HTML export. The plugin
 
 `src/plotly-policy.json` lists geographic trace types already rejected by the document validator. `scripts/plotly-bundle.mjs` registers every other trace from the pinned Plotly schema, plus calendars and the Russian locale. Plotly 4.1.2 supplies 42 supported trace types after this filter. Legacy map names remain in the rejection policy too.
 
-The build uses Plotly source modules, its GLSL and CSS build plugins and browser shims. It does not modify vendor source, load a CDN or unpack compressed code at runtime. Its input graph must include every supported trace and must exclude geographic traces and map engines.
+The build uses Plotly source modules, a GLSL build plugin, a local CSS inliner and browser shims. CSS identifiers come from a content hash so different checkout paths produce identical files. It does not modify vendor source, load a CDN or unpack compressed code at runtime. Its input graph must include every supported trace and must exclude geographic traces and map engines.
 
 ## Compatibility checks
 
